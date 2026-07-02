@@ -79,7 +79,7 @@ export function Inventory() {
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [riskFilter, setRiskFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 8
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   const { data: rawInventory, isLoading } = useInventoryQuery({
     category: categoryFilter,
@@ -175,6 +175,24 @@ export function Inventory() {
 
         {/* Filters */}
         <div className='mt-4 flex flex-wrap items-center gap-3'>
+          <Select
+            value={String(itemsPerPage)}
+            onValueChange={(val) => {
+              setItemsPerPage(Number(val))
+              setCurrentPage(1)
+            }}
+          >
+            <SelectTrigger className='w-[110px]'>
+              <SelectValue placeholder='Tampilkan' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='10'>10 Baris</SelectItem>
+              <SelectItem value='25'>25 Baris</SelectItem>
+              <SelectItem value='50'>50 Baris</SelectItem>
+              <SelectItem value='100'>100 Baris</SelectItem>
+            </SelectContent>
+          </Select>
+
           <div className='relative flex-1 sm:max-w-xs'>
             <SearchIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
             <Input
