@@ -4,7 +4,7 @@ export default () => ({
     url: process.env.DATABASE_URL,
   },
   jwt: {
-    secret: process.env.JWT_SECRET || 'freashday-jwt-super-secret-change-in-production',
+    secret: process.env.JWT_SECRET || 'dev_secret',
     expiration: process.env.JWT_EXPIRATION || '7d',
   },
 });

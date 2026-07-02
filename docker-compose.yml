@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-freashday}
       POSTGRES_USER: ${POSTGRES_USER:-freashday_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-freashday_secret_2026}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
       - "5432:5432"
     healthcheck:
@@ -27,8 +27,8 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-freashday_user}:${POSTGRES_PASSWORD:-freashday_secret_2026}@postgres:5432/${POSTGRES_DB:-freashday}
-      JWT_SECRET: ${JWT_SECRET:-freashday-jwt-super-secret-change-in-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-freashday_user}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-freashday}
+      JWT_SECRET: ${JWT_SECRET:-dev_secret}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-7d}
       NODE_ENV: ${NODE_ENV:-production}
       API_PORT: 3000
