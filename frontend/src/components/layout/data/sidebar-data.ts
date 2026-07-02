@@ -6,11 +6,6 @@ import {
   BarChart3,
   Users,
   Settings,
-  UserCog,
-  Palette,
-  Bell,
-  Monitor,
-  Wrench,
   Leaf,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
@@ -69,34 +64,8 @@ export const sidebarData: SidebarData = {
         },
         {
           title: 'Pengaturan',
+          url: '/settings',
           icon: Settings,
-          items: [
-            {
-              title: 'Profil',
-              url: '/settings',
-              icon: UserCog,
-            },
-            {
-              title: 'Akun',
-              url: '/settings/account',
-              icon: Wrench,
-            },
-            {
-              title: 'Tampilan',
-              url: '/settings/appearance',
-              icon: Palette,
-            },
-            {
-              title: 'Notifikasi',
-              url: '/settings/notifications',
-              icon: Bell,
-            },
-            {
-              title: 'Display',
-              url: '/settings/display',
-              icon: Monitor,
-            },
-          ],
         },
       ],
     },
