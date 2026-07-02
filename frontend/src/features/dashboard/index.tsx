@@ -67,15 +67,16 @@ function MetricCard({ data }: { data: MetricCardData }) {
 
 function SustainabilityScoreCard({ score }: { score: number }) {
   return (
-    <Card className='flex flex-col items-center justify-center'>
-      <CardHeader className='pb-2 text-center'>
-        <CardTitle className='text-sm font-medium'>
+    <Card className='flex flex-col justify-between h-full'>
+      <CardHeader className='pb-2 text-start'>
+        <CardTitle className='text-sm font-medium flex items-center gap-2'>
+          <Leaf className='h-4 w-4 text-green-600' />
           Sustainability Score
         </CardTitle>
         <CardDescription>Skor keberlanjutan keseluruhan</CardDescription>
       </CardHeader>
-      <CardContent className='flex flex-col items-center'>
-        <div className='relative flex h-28 w-28 items-center justify-center'>
+      <CardContent className='flex-1 flex flex-col items-center justify-center py-6'>
+        <div className='relative flex h-28 w-28 items-center justify-center mb-4'>
           <svg className='h-28 w-28 -rotate-90' viewBox='0 0 100 100'>
             <circle
               cx='50'
@@ -99,11 +100,11 @@ function SustainabilityScoreCard({ score }: { score: number }) {
             />
           </svg>
           <div className='absolute flex flex-col items-center'>
-            <span className='text-lg font-bold tracking-tight'>{score}%</span>
+            <span className='text-xl font-bold tracking-tight'>{score}%</span>
           </div>
         </div>
-        <p className='mt-2 flex items-center text-xs text-green-600'>
-          <ArrowUpRight className='mr-1 h-3 w-3' />
+        <p className='flex items-center text-xs text-green-600 bg-green-50 dark:bg-green-950/40 px-2.5 py-1 rounded-full font-medium'>
+          <ArrowUpRight className='mr-1 h-3.5 w-3.5' />
           +1.5% vs bulan lalu
         </p>
       </CardContent>
