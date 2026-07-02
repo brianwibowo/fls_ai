@@ -4,11 +4,11 @@ Sistem manajemen logistik pangan segar cerdas yang dioptimalkan untuk meminimalk
 
 ## 🚀 Fitur Utama
 1. **Smart Logistics Dashboard**: Executive summary kondisi logistik, Sustainability Score, dan metrik keberlanjutan real-time.
-2. **Inventory Management (FEFO)**: Pemantauan stok aktif per batch, penghitungan otomatis sisa umur simpan, level risiko, dan auto-deduction stok terlama saat transaksi.
-3. **AI Forecasting**: Prediksi jumlah permintaan harian dan rekomendasi kuantitas order preventif.
-4. **Digital Nudging**: Halaman manajemen nudge promosi (diskon, bundling, tag urgensi) untuk mempercepat penjualan barang mendekati masa kadaluarsa.
-5. **Analytics & Performance**: Evaluasi visual (grafik Recharts) dampak waste reduction, performa per kategori produk, dan AI Insights logistik.
-6. **User Management**: Pengaturan multi-role (Admin, Logistics Manager, Marketing Manager) dengan pembatasan hak akses (RBAC).
+2. **Inventory Management (FEFO)**: Pemantauan stok aktif per batch, penambahan batch baru secara interaktif (dengan otomatisasi registrasi produk baru dan auto-kapitalisasi nama produk), serta auto-deduction stok terlama saat transaksi.
+3. **AI Forecasting**: Prediksi jumlah permintaan harian, estimasi kerugian dari *waste risk*, integrasi langsung ke pembuatan *digital nudge*, serta rekomendasi kuantitas order preventif.
+4. **Digital Nudging**: Halaman manajemen nudge promosi (diskon, bundling, tag urgensi, badge) lengkap dengan form pembuatan strategi baru (dengan auto-kapitalisasi nama strategi) untuk mempercepat penjualan barang mendekati masa kadaluarsa.
+5. **Analytics & Performance**: Evaluasi visual (grafik Recharts) dampak waste reduction, performa per kategori produk, dan rekomendasi rantai pasok berbasis AI (*AI Insights*) dengan desain panel grid yang indah dan informatif.
+6. **User Management**: Pengaturan multi-role (Admin, Logistics Manager, Marketing Manager) dengan pembatasan hak akses (RBAC) dan pendaftaran user langsung di aplikasi.
 
 ---
 
