@@ -7,6 +7,8 @@ import {
   Search as SearchIcon,
   Plus,
   ArrowUpDown,
+  LayoutGrid,
+  List,
 } from 'lucide-react'
 import {
   Card,
@@ -32,12 +34,21 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { toast } from 'sonner'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { useInventoryQuery, useInventorySummaryQuery } from '@/hooks/use-api'
+import { useInventoryQuery, useInventorySummaryQuery, useUpdateProductMutation } from '@/hooks/use-api'
 import { TableSkeleton } from '@/components/page-skeletons'
 
 // --- Helpers ---
@@ -80,6 +91,11 @@ export function Inventory() {
   const [riskFilter, setRiskFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [viewMode, setViewMode] = useState<'list' | 'icons'>('list')
+  const [editingProduct, setEditingProduct] = useState<{ id: string; name: string; imageUrl: string } | null>(null)
+  const [newImageUrl, setNewImageUrl] = useState('')
+
+  const updateProduct = useUpdateProductMutation()
 
   const { data: rawInventory, isLoading } = useInventoryQuery({
     category: categoryFilter,
@@ -91,6 +107,29 @@ export function Inventory() {
   useEffect(() => {
     setCurrentPage(1)
   }, [searchQuery, categoryFilter, riskFilter])
+
+  // Prefill image URL when editing product
+  useEffect(() => {
+    if (editingProduct) {
+      setNewImageUrl(editingProduct.imageUrl)
+    } else {
+      setNewImageUrl('')
+    }
+  }, [editingProduct])
+
+  const handleUpdateImage = async () => {
+    if (!editingProduct) return
+    try {
+      await updateProduct.mutateAsync({
+        id: editingProduct.id,
+        imageUrl: newImageUrl,
+      })
+      toast.success('Gambar produk berhasil diperbarui!')
+      setEditingProduct(null)
+    } catch {
+      toast.error('Gagal memperbarui gambar produk.')
+    }
+  }
 
   const { data: summaryData } = useInventorySummaryQuery()
 
@@ -111,6 +150,7 @@ export function Inventory() {
 
     return {
       id: batch.id,
+      productId: batch.productId,
       product: batch.product.name,
       sku: batch.product.sku,
       category: batch.product.category.name,
@@ -119,6 +159,7 @@ export function Inventory() {
       status,
       daysLeft: batch.daysLeft,
       risk,
+      image: batch.product.imageUrl,
     }
   })
 
@@ -225,17 +266,43 @@ export function Inventory() {
               <SelectItem value='Low'>Low</SelectItem>
             </SelectContent>
           </Select>
+
+          <div className='ms-auto flex items-center border rounded-md p-0.5 bg-card gap-1'>
+            <Button
+              variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+              size='icon'
+              className='h-8 w-8'
+              onClick={() => setViewMode('list')}
+              title='Show as list'
+            >
+              <List className='h-4 w-4' />
+            </Button>
+            <Button
+              variant={viewMode === 'icons' ? 'secondary' : 'ghost'}
+              size='icon'
+              className='h-8 w-8'
+              onClick={() => setViewMode('icons')}
+              title='Show as icons'
+            >
+              <LayoutGrid className='h-4 w-4' />
+            </Button>
+          </div>
         </div>
 
-        {/* Inventory Table */}
-        <Card className='mt-4'>
-          <CardContent className='p-0'>
-            {isLoading ? (
-              <TableSkeleton cols={8} rows={6} />
-            ) : (
+        {/* Inventory View */}
+        {isLoading ? (
+          <Card className='mt-4'>
+            <CardContent className='p-0'>
+              <TableSkeleton cols={9} rows={6} />
+            </CardContent>
+          </Card>
+        ) : viewMode === 'list' ? (
+          <Card className='mt-4'>
+            <CardContent className='p-0'>
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className='w-[80px]'>Gambar</TableHead>
                     <TableHead>
                       <Button variant='ghost' size='sm' className='p-0 font-medium'>
                         Product <ArrowUpDown className='ml-1 h-3 w-3' />
@@ -262,6 +329,19 @@ export function Inventory() {
                   {paginatedInventory.length ? (
                     paginatedInventory.map((item: any) => (
                       <TableRow key={item.id}>
+                        <TableCell>
+                          <div
+                            className='h-10 w-10 rounded-md bg-muted/40 overflow-hidden flex items-center justify-center border cursor-pointer hover:border-primary/50 transition-colors'
+                            onClick={() => setEditingProduct({ id: item.productId, name: item.product, imageUrl: item.image || '' })}
+                            title='Klik untuk ubah gambar'
+                          >
+                            {item.image ? (
+                              <img src={item.image} alt={item.product} className='h-full w-full object-cover animate-fade-in' />
+                            ) : (
+                              <Package className='h-5 w-5 text-muted-foreground/50' />
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className='font-medium'>
                           {item.product}
                         </TableCell>
@@ -292,16 +372,74 @@ export function Inventory() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={8} className='h-24 text-center text-muted-foreground'>
+                      <TableCell colSpan={9} className='h-24 text-center text-muted-foreground'>
                         Tidak ada data stok ditemukan.
                       </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        ) : (
+          /* Icons / Grid View */
+          <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-4'>
+            {paginatedInventory.length ? (
+              paginatedInventory.map((item: any) => (
+                <Card key={item.id} className='overflow-hidden group border hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-md bg-card flex flex-col justify-between'>
+                  <div
+                    className='relative flex h-40 w-full items-center justify-center bg-muted/30 overflow-hidden cursor-pointer'
+                    onClick={() => setEditingProduct({ id: item.productId, name: item.product, imageUrl: item.image || '' })}
+                    title='Klik untuk ubah gambar'
+                  >
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.product}
+                        className='h-full w-full object-cover transition-transform duration-500 group-hover:scale-105'
+                      />
+                    ) : (
+                      <Package className='h-12 w-12 text-muted-foreground/40 group-hover:scale-110 transition-transform duration-300' />
+                    )}
+                    {/* Absolute Badges Overlay */}
+                    <div className='absolute top-2 left-2'>
+                      <Badge variant={getRiskBadgeVariant(item.risk)}>{item.risk} Risk</Badge>
+                    </div>
+                    <div className='absolute top-2 right-2'>
+                      <Badge variant='outline' className='bg-background/80 backdrop-blur-xs'>{item.category}</Badge>
+                    </div>
+                  </div>
+                  <CardHeader className='pb-2 pt-4 px-4'>
+                    <div className='flex justify-between items-start gap-1'>
+                      <CardTitle className='text-sm font-semibold line-clamp-1'>{item.product}</CardTitle>
+                      <code className='text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground'>{item.sku}</code>
+                    </div>
+                  </CardHeader>
+                  <CardContent className='pb-4 pt-0 px-4 flex-1 flex flex-col justify-end space-y-3'>
+                    <div className='grid grid-cols-2 gap-2 text-xs border-y py-2 border-border/40'>
+                      <div>
+                        <span className='text-muted-foreground block text-[10px]'>Stok Aktif</span>
+                        <span className='font-bold text-xs'>{item.stock}</span>
+                      </div>
+                      <div>
+                        <span className='text-muted-foreground block text-[10px]'>Estimasi Demand</span>
+                        <span className='font-semibold text-xs'>{item.demand}</span>
+                      </div>
+                    </div>
+                    <div className='flex justify-between items-center text-xs'>
+                      <span className={`font-medium ${getStatusColor(item.status)}`}>{item.status}</span>
+                      <span className={`text-[11px] ${getDaysLeftColor(item.daysLeft)}`}>{item.daysLeft} hari lagi</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <div className='col-span-full h-40 text-center text-muted-foreground flex items-center justify-center border rounded-lg bg-muted/10'>
+                Tidak ada data stok ditemukan.
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        )}
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
@@ -332,6 +470,51 @@ export function Inventory() {
             </div>
           </div>
         )}
+
+        {/* Dialog Edit Gambar */}
+        <Dialog open={editingProduct !== null} onOpenChange={(open) => !open && setEditingProduct(null)}>
+          <DialogContent className='sm:max-w-md'>
+            <DialogHeader>
+              <DialogTitle>Ubah Gambar Produk</DialogTitle>
+              <DialogDescription>
+                Masukkan tautan URL baru untuk gambar produk <strong>{editingProduct?.name}</strong>.
+              </DialogDescription>
+            </DialogHeader>
+            <div className='flex flex-col space-y-4 py-4'>
+              <div className='flex items-center justify-center h-40 w-full rounded-md border bg-muted/10 overflow-hidden'>
+                {newImageUrl ? (
+                  <img
+                    src={newImageUrl}
+                    alt='Preview'
+                    className='h-full w-full object-cover'
+                    onError={(e) => {
+                      ;(e.target as HTMLImageElement).src = ''
+                      toast.error('Gagal memuat preview gambar. Pastikan URL valid.')
+                    }}
+                  />
+                ) : (
+                  <Package className='h-12 w-12 text-muted-foreground/30' />
+                )}
+              </div>
+              <div className='space-y-1'>
+                <label className='text-xs font-semibold text-muted-foreground'>URL Gambar</label>
+                <Input
+                  placeholder='https://images.unsplash.com/...'
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter className='sm:justify-end gap-2'>
+              <Button variant='outline' onClick={() => setEditingProduct(null)}>
+                Batal
+              </Button>
+              <Button onClick={handleUpdateImage} disabled={updateProduct.isPending}>
+                Simpan Perubahan
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </Main>
     </>
   )

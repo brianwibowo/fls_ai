@@ -266,3 +266,29 @@ export function useDeleteUserMutation() {
     },
   })
 }
+
+// --- Product Hooks ---
+export function useProductsQuery(filters: { category?: string; search?: string } = {}) {
+  return useQuery({
+    queryKey: ['products', filters],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/products', { params: filters })
+      return data
+    },
+  })
+}
+
+export function useUpdateProductMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, imageUrl }: { id: string; imageUrl: string }) => {
+      const { data } = await apiClient.patch(`/products/${id}`, { imageUrl })
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['inventory'] })
+    },
+  })
+}
+
