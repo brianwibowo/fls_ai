@@ -80,13 +80,13 @@ export function NavUser({ user }: NavUserProps) {
                 <DropdownMenuItem asChild>
                   <Link to='/settings/account'>
                     <BadgeCheck />
-                    Account
+                    Profile
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to='/settings/notifications'>
+                  <Link to='/settings/appearance'>
                     <Bell />
-                    Notifications
+                    Tampilan
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuGroup>

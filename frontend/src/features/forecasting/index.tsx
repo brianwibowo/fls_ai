@@ -122,7 +122,7 @@ export function Forecasting() {
   return (
     <>
       <Header>
-        <Search />
+        <Search className='me-auto' />
         <ThemeSwitch />
         <ProfileDropdown />
       </Header>

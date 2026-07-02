@@ -222,7 +222,7 @@ export function Dashboard() {
   return (
     <>
       <Header>
-        <Search />
+        <Search className='me-auto' />
         <ThemeSwitch />
         <ProfileDropdown />
       </Header>

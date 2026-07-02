@@ -129,7 +129,7 @@ export function Nudging() {
   return (
     <>
       <Header>
-        <Search />
+        <Search className='me-auto' />
         <ThemeSwitch />
         <ProfileDropdown />
       </Header>

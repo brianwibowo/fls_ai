@@ -106,7 +106,7 @@ export function Analytics() {
   return (
     <>
       <Header>
-        <Search />
+        <Search className='me-auto' />
         <ThemeSwitch />
         <ProfileDropdown />
       </Header>

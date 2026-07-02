@@ -173,7 +173,7 @@ export function Inventory() {
   return (
     <>
       <Header>
-        <Search />
+        <Search className='me-auto' />
         <ThemeSwitch />
         <ProfileDropdown />
       </Header>
