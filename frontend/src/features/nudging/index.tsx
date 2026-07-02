@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Eye,
   TrendingUp,
@@ -87,6 +88,24 @@ export function Nudging() {
   const { data: summaryData } = useNudgingSummaryQuery()
 
   const updateNudge = useUpdateNudgeMutation()
+
+  const [strategiesPage, setStrategiesPage] = useState(1)
+  const [logsPage, setLogsPage] = useState(1)
+  const itemsPerPage = 5
+
+  const totalStrategies = strategiesData?.length ?? 0
+  const totalStrategiesPages = Math.ceil(totalStrategies / itemsPerPage)
+  const paginatedStrategies = (strategiesData || []).slice(
+    (strategiesPage - 1) * itemsPerPage,
+    strategiesPage * itemsPerPage
+  )
+
+  const totalLogs = logsData?.length ?? 0
+  const totalLogsPages = Math.ceil(totalLogs / itemsPerPage)
+  const paginatedLogs = (logsData || []).slice(
+    (logsPage - 1) * itemsPerPage,
+    logsPage * itemsPerPage
+  )
 
   const summaryCards = [
     { title: 'Total Impressions', value: summaryData?.totalImpressions ?? '12,450', icon: Eye, trend: '+1,200' },
@@ -184,8 +203,8 @@ export function Nudging() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {strategiesData && strategiesData.length ? (
-                        strategiesData.map((strategy: any) => {
+                      {paginatedStrategies.length ? (
+                        paginatedStrategies.map((strategy: any) => {
                           const start = new Date(strategy.startDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
                           const end = new Date(strategy.endDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
                           const isActive = strategy.status === 'ACTIVE'
@@ -231,6 +250,36 @@ export function Nudging() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Pagination Controls */}
+            {totalStrategiesPages > 1 && (
+              <div className='mt-4 flex items-center justify-between px-2'>
+                <div className='text-xs text-muted-foreground'>
+                  Menampilkan {((strategiesPage - 1) * itemsPerPage) + 1} - {Math.min(strategiesPage * itemsPerPage, totalStrategies)} dari {totalStrategies} strategi
+                </div>
+                <div className='flex items-center space-x-2'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setStrategiesPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={strategiesPage === 1}
+                  >
+                    Sebelumnya
+                  </Button>
+                  <span className='text-xs text-muted-foreground min-w-8 text-center'>
+                    {strategiesPage} / {totalStrategiesPages}
+                  </span>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setStrategiesPage((prev) => Math.min(prev + 1, totalStrategiesPages))}
+                    disabled={strategiesPage === totalStrategiesPages}
+                  >
+                    Selanjutnya
+                  </Button>
+                </div>
+              </div>
+            )}
           </TabsContent>
 
           {/* Product Preview Tab */}
@@ -306,8 +355,8 @@ export function Nudging() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {logsData && logsData.length ? (
-                        logsData.map((log: any) => {
+                      {paginatedLogs.length ? (
+                        paginatedLogs.map((log: any) => {
                           const date = new Date(log.occurredAt).toLocaleString('id-ID', {
                             day: 'numeric',
                             month: 'short',
@@ -344,6 +393,36 @@ export function Nudging() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Pagination Controls */}
+            {totalLogsPages > 1 && (
+              <div className='mt-4 flex items-center justify-between px-2'>
+                <div className='text-xs text-muted-foreground'>
+                  Menampilkan {((logsPage - 1) * itemsPerPage) + 1} - {Math.min(logsPage * itemsPerPage, totalLogs)} dari {totalLogs} log
+                </div>
+                <div className='flex items-center space-x-2'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setLogsPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={logsPage === 1}
+                  >
+                    Sebelumnya
+                  </Button>
+                  <span className='text-xs text-muted-foreground min-w-8 text-center'>
+                    {logsPage} / {totalLogsPages}
+                  </span>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setLogsPage((prev) => Math.min(prev + 1, totalLogsPages))}
+                    disabled={logsPage === totalLogsPages}
+                  >
+                    Selanjutnya
+                  </Button>
+                </div>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </Main>

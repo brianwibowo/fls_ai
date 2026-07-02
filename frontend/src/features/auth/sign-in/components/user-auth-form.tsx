@@ -66,6 +66,7 @@ export function UserAuthForm({
       auth.setAccessToken(access_token)
       auth.setUser({
         accountNo: user.id,
+        name: user.name,
         email: user.email,
         role: [user.role.toLowerCase()],
         exp: Date.now() + 7 * 24 * 60 * 60 * 1000,

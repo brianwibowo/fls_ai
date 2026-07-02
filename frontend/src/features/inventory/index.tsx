@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Package,
   AlertTriangle,
@@ -78,12 +78,19 @@ export function Inventory() {
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [riskFilter, setRiskFilter] = useState('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 8
 
   const { data: rawInventory, isLoading } = useInventoryQuery({
     category: categoryFilter,
     risk: riskFilter,
     search: searchQuery,
   })
+
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, categoryFilter, riskFilter])
 
   const { data: summaryData } = useInventorySummaryQuery()
 
@@ -114,6 +121,13 @@ export function Inventory() {
       risk,
     }
   })
+
+  const totalItems = mappedInventory.length
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const paginatedInventory = mappedInventory.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  )
 
   return (
     <>
@@ -227,8 +241,8 @@ export function Inventory() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mappedInventory.length ? (
-                    mappedInventory.map((item: any) => (
+                  {paginatedInventory.length ? (
+                    paginatedInventory.map((item: any) => (
                       <TableRow key={item.id}>
                         <TableCell className='font-medium'>
                           {item.product}
@@ -270,6 +284,36 @@ export function Inventory() {
             )}
           </CardContent>
         </Card>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className='mt-4 flex items-center justify-between px-2'>
+            <div className='text-xs text-muted-foreground'>
+              Menampilkan {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} dari {totalItems} item
+            </div>
+            <div className='flex items-center space-x-2'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Sebelumnya
+              </Button>
+              <span className='text-xs text-muted-foreground min-w-8 text-center'>
+                {currentPage} / {totalPages}
+              </span>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                Selanjutnya
+              </Button>
+            </div>
+          </div>
+        )}
       </Main>
     </>
   )
