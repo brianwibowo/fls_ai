@@ -1,0 +1,234 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  LOGISTICS_MANAGER
+  MARKETING_MANAGER
+}
+
+enum BatchStatus {
+  ACTIVE
+  EXPIRED
+  SOLD_OUT
+  DISPOSED
+}
+
+enum StockStatus {
+  OPTIMAL
+  LOW
+  OVERSTOCK
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum Urgency {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum NudgeType {
+  DISCOUNT
+  BUNDLING
+  URGENCY_LABEL
+  GAMIFICATION_BADGE
+}
+
+enum NudgeStatus {
+  ACTIVE
+  SCHEDULED
+  ENDED
+}
+
+enum ReorderStatus {
+  PENDING
+  ORDERED
+  DISMISSED
+}
+
+enum NudgeEventType {
+  IMPRESSION
+  CLICK
+  CONVERSION
+}
+
+model User {
+  id           String          @id @default(uuid())
+  name         String
+  email        String          @unique
+  passwordHash String
+  role         UserRole
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  nudges       NudgeStrategy[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id                     String                  @id @default(uuid())
+  sku                    String                  @unique
+  name                   String
+  categoryId             String
+  unit                   String                  // e.g. "pcs", "kg", "liter"
+  shelfLifeDays          Int                     // Standard shelf life in days
+  unitCost               Decimal                 @db.Decimal(12, 2)
+  unitPrice              Decimal                 @db.Decimal(12, 2)
+  imageUrl               String?
+  isActive               Boolean                 @default(true)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  category               Category                @relation(fields: [categoryId], references: [id])
+  batches                InventoryBatch[]
+  sales                  SalesTransaction[]
+  forecasts              DemandForecast[]
+  reorderRecommendations ReorderRecommendation[]
+  nudges                 NudgeProduct[]
+  nudgeLogs              NudgeActivityLog[]
+
+  @@map("products")
+}
+
+model InventoryBatch {
+  id               String             @id @default(uuid())
+  productId        String
+  batchCode        String
+  quantityReceived Int
+  quantityCurrent  Int
+  receivedDate     DateTime           @db.Date
+  expiryDate       DateTime           @db.Date
+  status           BatchStatus        @default(ACTIVE)
+  createdAt        DateTime           @default(now())
+  product          Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sales            SalesTransaction[]
+
+  @@index([expiryDate])
+  @@index([status])
+  @@map("inventory_batches")
+}
+
+model SalesTransaction {
+  id           String          @id @default(uuid())
+  productId    String
+  batchId      String?
+  quantitySold Int
+  saleDate     DateTime        @db.Date
+  salePrice    Decimal         @db.Decimal(12, 2)
+  wasNudged    Boolean         @default(false)
+  nudgeId      String?
+  createdAt    DateTime        @default(now())
+  product      Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  batch        InventoryBatch? @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  nudge        NudgeStrategy?  @relation(fields: [nudgeId], references: [id], onDelete: SetNull)
+
+  @@index([saleDate])
+  @@index([productId])
+  @@map("sales_transactions")
+}
+
+model DemandForecast {
+  id              String   @id @default(uuid())
+  productId       String
+  forecastDate    DateTime @db.Date
+  predictedDemand Int
+  actualDemand    Int?
+  modelVersion    String
+  createdAt       DateTime @default(now())
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, forecastDate])
+  @@map("demand_forecasts")
+}
+
+model ReorderRecommendation {
+  id                  String        @id @default(uuid())
+  productId           String
+  currentStock        Int
+  recommendedQuantity Int
+  urgency             Urgency
+  aiReasoning         String
+  status              ReorderStatus @default(PENDING)
+  createdAt           DateTime      @default(now())
+  product             Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("reorder_recommendations")
+}
+
+model NudgeStrategy {
+  id                 String             @id @default(uuid())
+  name               String
+  type               NudgeType
+  discountPercentage Decimal?           @db.Decimal(5, 2)
+  startDate          DateTime           @db.Date
+  endDate            DateTime           @db.Date
+  status             NudgeStatus        @default(SCHEDULED)
+  createdById        String
+  createdAt          DateTime           @default(now())
+  createdBy          User               @relation(fields: [createdById], references: [id])
+  products           NudgeProduct[]
+  sales              SalesTransaction[]
+  logs               NudgeActivityLog[]
+
+  @@map("nudge_strategies")
+}
+
+model NudgeProduct {
+  id        String        @id @default(uuid())
+  nudgeId   String
+  productId String
+  nudge     NudgeStrategy @relation(fields: [nudgeId], references: [id], onDelete: Cascade)
+  product   Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([nudgeId, productId])
+  @@map("nudge_products")
+}
+
+model NudgeActivityLog {
+  id         String         @id @default(uuid())
+  nudgeId    String
+  eventType  NudgeEventType
+  productId  String
+  occurredAt DateTime       @default(now())
+  nudge      NudgeStrategy  @relation(fields: [nudgeId], references: [id], onDelete: Cascade)
+  product    Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("nudge_activity_logs")
+}
+
+model AnalyticsSnapshot {
+  id                    String   @id @default(uuid())
+  snapshotDate          DateTime @unique @db.Date
+  wasteReductionPct     Decimal  @db.Decimal(5, 2)
+  demandAccuracyPct     Decimal  @db.Decimal(5, 2)
+  sellThroughRatePct    Decimal  @db.Decimal(5, 2)
+  inventoryTurnover     Decimal  @db.Decimal(5, 2)
+  customerSatisfaction  Decimal  @db.Decimal(3, 2)
+  itemsRecovered        Int
+  foodSavedThisMonth    Int
+  sustainabilityScore   Decimal  @db.Decimal(5, 2)
+  createdAt             DateTime @default(now())
+
+  @@map("analytics_snapshots")
+}

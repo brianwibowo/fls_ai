@@ -1,0 +1,9 @@
+import { IsNotEmpty, IsOptional } from 'class-validator';
+
+export class CreateCategoryDto {
+  @IsNotEmpty({ message: 'Nama kategori tidak boleh kosong.' })
+  name: string;
+
+  @IsOptional()
+  description?: string;
+}
