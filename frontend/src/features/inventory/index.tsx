@@ -48,7 +48,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { useInventoryQuery, useInventorySummaryQuery, useUpdateProductMutation } from '@/hooks/use-api'
+import { useInventoryQuery, useInventorySummaryQuery, useUpdateProductMutation, useCreateBatchMutation, useProductsQuery } from '@/hooks/use-api'
 import { TableSkeleton } from '@/components/page-skeletons'
 
 // --- Helpers ---
@@ -131,6 +131,47 @@ export function Inventory() {
     }
   }
 
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false)
+  const [newBatchData, setNewBatchData] = useState({
+    productId: '',
+    batchCode: '',
+    quantityReceived: 50,
+    receivedDate: new Date().toISOString().split('T')[0],
+    expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  })
+
+  const createBatch = useCreateBatchMutation()
+  const { data: products } = useProductsQuery()
+
+  const handleCreateBatch = async () => {
+    if (!newBatchData.productId || !newBatchData.batchCode || !newBatchData.quantityReceived) {
+      toast.error('Harap isi semua kolom.')
+      return
+    }
+    try {
+      await createBatch.mutateAsync({
+        productId: newBatchData.productId,
+        batchCode: newBatchData.batchCode,
+        quantityReceived: Number(newBatchData.quantityReceived),
+        receivedDate: new Date(newBatchData.receivedDate).toISOString(),
+        expiryDate: new Date(newBatchData.expiryDate).toISOString(),
+      })
+      toast.success('Batch baru berhasil ditambahkan!')
+      setBatchDialogOpen(false)
+      // Reset form
+      setNewBatchData({
+        productId: '',
+        batchCode: '',
+        quantityReceived: 50,
+        receivedDate: new Date().toISOString().split('T')[0],
+        expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      })
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Gagal menyimpan batch baru.'
+      toast.error(message)
+    }
+  }
+
   const { data: summaryData } = useInventorySummaryQuery()
 
   const summaryCards = [
@@ -188,7 +229,7 @@ export function Inventory() {
               Pemantauan stok, kategori produk, dan status risiko kadaluarsa
             </p>
           </div>
-          <Button>
+           <Button onClick={() => setBatchDialogOpen(true)} className='cursor-pointer'>
             <Plus className='mr-2 h-4 w-4' />
             Tambah Batch
           </Button>
@@ -511,6 +552,80 @@ export function Inventory() {
               </Button>
               <Button onClick={handleUpdateImage} disabled={updateProduct.isPending}>
                 Simpan Perubahan
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Tambah Batch */}
+        <Dialog open={batchDialogOpen} onOpenChange={setBatchDialogOpen}>
+          <DialogContent className='sm:max-w-md'>
+            <DialogHeader>
+              <DialogTitle>Tambah Batch Baru</DialogTitle>
+              <DialogDescription>
+                Masukkan rincian batch baru untuk produk pangan segar di inventaris.
+              </DialogDescription>
+            </DialogHeader>
+            <div className='flex flex-col space-y-4 py-4 text-start'>
+              <div className='space-y-1'>
+                <label className='text-xs font-semibold text-muted-foreground'>Pilih Produk</label>
+                <Select value={newBatchData.productId} onValueChange={(val) => setNewBatchData(p => ({ ...p, productId: val }))}>
+                  <SelectTrigger className='cursor-pointer'>
+                    <SelectValue placeholder='Pilih produk...' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products?.map((p: any) => (
+                      <SelectItem key={p.id} value={p.id} className='cursor-pointer'>
+                        {p.name} ({p.sku})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className='grid grid-cols-2 gap-3'>
+                <div className='space-y-1'>
+                  <label className='text-xs font-semibold text-muted-foreground'>Kode Batch</label>
+                  <Input
+                    placeholder='BTC-001'
+                    value={newBatchData.batchCode}
+                    onChange={(e) => setNewBatchData(p => ({ ...p, batchCode: e.target.value }))}
+                  />
+                </div>
+                <div className='space-y-1'>
+                  <label className='text-xs font-semibold text-muted-foreground'>Kuantitas Diterima</label>
+                  <Input
+                    type='number'
+                    placeholder='100'
+                    value={newBatchData.quantityReceived || ''}
+                    onChange={(e) => setNewBatchData(p => ({ ...p, quantityReceived: Number(e.target.value) }))}
+                  />
+                </div>
+              </div>
+              <div className='grid grid-cols-2 gap-3'>
+                <div className='space-y-1'>
+                  <label className='text-xs font-semibold text-muted-foreground'>Tanggal Masuk</label>
+                  <Input
+                    type='date'
+                    value={newBatchData.receivedDate}
+                    onChange={(e) => setNewBatchData(p => ({ ...p, receivedDate: e.target.value }))}
+                  />
+                </div>
+                <div className='space-y-1'>
+                  <label className='text-xs font-semibold text-muted-foreground'>Tanggal Kadaluarsa</label>
+                  <Input
+                    type='date'
+                    value={newBatchData.expiryDate}
+                    onChange={(e) => setNewBatchData(p => ({ ...p, expiryDate: e.target.value }))}
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter className='sm:justify-end gap-2'>
+              <Button variant='outline' onClick={() => setBatchDialogOpen(false)}>
+                Batal
+              </Button>
+              <Button onClick={handleCreateBatch} disabled={createBatch.isPending} className='cursor-pointer'>
+                Simpan Batch
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -25,7 +25,7 @@ export function AppTitle() {
             <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
               <Leaf className='h-5 w-5' />
             </div>
-            <div className='grid flex-1 text-start text-sm leading-tight'>
+            <div className='grid flex-1 text-start text-sm leading-tight group-data-[collapsible=icon]:hidden'>
               <span className='truncate font-bold text-foreground'>Freashday</span>
               <span className='truncate text-xs text-muted-foreground'>Food Logistic System</span>
             </div>

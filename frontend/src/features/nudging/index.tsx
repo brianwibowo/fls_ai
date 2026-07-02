@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { getRouteApi } from '@tanstack/react-router'
 import {
   Eye,
   TrendingUp,
@@ -19,6 +20,22 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Table,
   TableBody,
@@ -38,6 +55,8 @@ import {
   useNudgeLogsQuery,
   useNudgingSummaryQuery,
   useUpdateNudgeMutation,
+  useCreateNudgeMutation,
+  useProductsQuery,
 } from '@/hooks/use-api'
 import { toast } from 'sonner'
 
@@ -79,15 +98,67 @@ function getEventBadgeVariant(eventType: string) {
   }
 }
 
-// --- Main Component ---
+const route = getRouteApi('/_authenticated/nudging')
 
 export function Nudging() {
+  const search = route.useSearch()
   const { data: strategiesData, isLoading: isStrategiesLoading } = useNudgeStrategiesQuery()
   const { data: previewData, isLoading: isPreviewLoading } = useNudgePreviewsQuery()
   const { data: logsData, isLoading: isLogsLoading } = useNudgeLogsQuery()
   const { data: summaryData } = useNudgingSummaryQuery()
 
   const updateNudge = useUpdateNudgeMutation()
+  const createNudge = useCreateNudgeMutation()
+  const { data: products } = useProductsQuery()
+
+  const [nudgeDialogOpen, setNudgeDialogOpen] = useState(false)
+  const [newNudgeData, setNewNudgeData] = useState({
+    name: '',
+    type: 'DISCOUNT',
+    discountPercentage: 10,
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    productId: '',
+  })
+
+  // Auto-open and prefill if navigated with query param
+  useEffect(() => {
+    if (search.createNudgeForProductId) {
+      setNewNudgeData((p) => ({ ...p, productId: search.createNudgeForProductId! }))
+      setNudgeDialogOpen(true)
+    }
+  }, [search.createNudgeForProductId])
+
+  const handleCreateNudge = async () => {
+    if (!newNudgeData.name || !newNudgeData.productId) {
+      toast.error('Harap isi semua kolom.')
+      return
+    }
+    try {
+      await createNudge.mutateAsync({
+        name: newNudgeData.name,
+        type: newNudgeData.type,
+        discountPercentage: newNudgeData.type === 'DISCOUNT' ? Number(newNudgeData.discountPercentage) : undefined,
+        startDate: new Date(newNudgeData.startDate).toISOString(),
+        endDate: new Date(newNudgeData.endDate).toISOString(),
+        productIds: [newNudgeData.productId],
+      })
+      toast.success('Strategi nudge baru berhasil dibuat!')
+      setNudgeDialogOpen(false)
+      // Reset form
+      setNewNudgeData({
+        name: '',
+        type: 'DISCOUNT',
+        discountPercentage: 10,
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        productId: '',
+      })
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Gagal menyimpan strategi nudge baru.'
+      toast.error(message)
+    }
+  }
 
   const [strategiesPage, setStrategiesPage] = useState(1)
   const [logsPage, setLogsPage] = useState(1)
@@ -144,7 +215,7 @@ export function Nudging() {
               Strategi promosi produk near-expiry untuk mendorong pembelian secara etis
             </p>
           </div>
-          <Button>
+          <Button onClick={() => setNudgeDialogOpen(true)} className='cursor-pointer'>
             <Plus className='mr-2 h-4 w-4' />
             Buat Strategi Baru
           </Button>
@@ -425,6 +496,94 @@ export function Nudging() {
             )}
           </TabsContent>
         </Tabs>
+        {/* Dialog Buat Nudge Baru */}
+        <Dialog open={nudgeDialogOpen} onOpenChange={setNudgeDialogOpen}>
+          <DialogContent className='sm:max-w-md'>
+            <DialogHeader>
+              <DialogTitle>Buat Strategi Nudge Baru</DialogTitle>
+              <DialogDescription>
+                Rancang kampanye promosi otomatis untuk produk pangan segar pilihan.
+              </DialogDescription>
+            </DialogHeader>
+            <div className='flex flex-col space-y-4 py-4 text-start'>
+              <div className='space-y-1'>
+                <label className='text-xs font-semibold text-muted-foreground'>Nama Strategi</label>
+                <Input
+                  placeholder='Contoh: Flash Sale Bayam Hijau'
+                  value={newNudgeData.name}
+                  onChange={(e) => setNewNudgeData(p => ({ ...p, name: e.target.value }))}
+                />
+              </div>
+              <div className='grid grid-cols-2 gap-3'>
+                <div className='space-y-1'>
+                  <label className='text-xs font-semibold text-muted-foreground'>Tipe Nudge</label>
+                  <Select value={newNudgeData.type} onValueChange={(val) => setNewNudgeData(p => ({ ...p, type: val }))}>
+                    <SelectTrigger className='cursor-pointer'>
+                      <SelectValue placeholder='Pilih tipe...' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='DISCOUNT' className='cursor-pointer'>Diskon</SelectItem>
+                      <SelectItem value='BUNDLING' className='cursor-pointer'>Bundling</SelectItem>
+                      <SelectItem value='URGENCY_LABEL' className='cursor-pointer'>Label Urgensi</SelectItem>
+                      <SelectItem value='GAMIFICATION_BADGE' className='cursor-pointer'>Badge Gamifikasi</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className='space-y-1'>
+                  <label className='text-xs font-semibold text-muted-foreground'>Persentase Diskon (%)</label>
+                  <Input
+                    type='number'
+                    placeholder='10'
+                    disabled={newNudgeData.type !== 'DISCOUNT'}
+                    value={newNudgeData.discountPercentage}
+                    onChange={(e) => setNewNudgeData(p => ({ ...p, discountPercentage: Number(e.target.value) }))}
+                  />
+                </div>
+              </div>
+              <div className='space-y-1'>
+                <label className='text-xs font-semibold text-muted-foreground'>Pilih Produk</label>
+                <Select value={newNudgeData.productId} onValueChange={(val) => setNewNudgeData(p => ({ ...p, productId: val }))}>
+                  <SelectTrigger className='cursor-pointer'>
+                    <SelectValue placeholder='Pilih produk...' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products?.map((p: any) => (
+                      <SelectItem key={p.id} value={p.id} className='cursor-pointer'>
+                        {p.name} ({p.sku})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className='grid grid-cols-2 gap-3'>
+                <div className='space-y-1'>
+                  <label className='text-xs font-semibold text-muted-foreground'>Tanggal Mulai</label>
+                  <Input
+                    type='date'
+                    value={newNudgeData.startDate}
+                    onChange={(e) => setNewNudgeData(p => ({ ...p, startDate: e.target.value }))}
+                  />
+                </div>
+                <div className='space-y-1'>
+                  <label className='text-xs font-semibold text-muted-foreground'>Tanggal Selesai</label>
+                  <Input
+                    type='date'
+                    value={newNudgeData.endDate}
+                    onChange={(e) => setNewNudgeData(p => ({ ...p, endDate: e.target.value }))}
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter className='sm:justify-end gap-2'>
+              <Button variant='outline' onClick={() => setNudgeDialogOpen(false)}>
+                Batal
+              </Button>
+              <Button onClick={handleCreateNudge} disabled={createNudge.isPending} className='cursor-pointer'>
+                Simpan Nudge
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </Main>
     </>
   )

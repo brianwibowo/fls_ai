@@ -1,3 +1,4 @@
+import { useNavigate } from '@tanstack/react-router'
 import {
   Target,
   TrendingUp,
@@ -76,6 +77,7 @@ function getUrgencyVariant(urgency: string) {
 // --- Main Component ---
 
 export function Forecasting() {
+  const navigate = useNavigate()
   const { data: forecastDemandData, isLoading: isDemandLoading } = useForecastDemandQuery()
   const { data: reorderData, isLoading: isReorderLoading } = useReorderQuery()
   const { data: wasteRiskData, isLoading: isWasteLoading } = useWasteRiskQuery()
@@ -342,7 +344,12 @@ export function Forecasting() {
                                 {formatRupiah(item.estimatedLoss)}
                               </TableCell>
                               <TableCell>
-                                <Button size='sm' variant='outline'>
+                                <Button
+                                  size='sm'
+                                  variant='outline'
+                                  className='cursor-pointer'
+                                  onClick={() => navigate({ to: '/nudging', search: { createNudgeForProductId: item.id } })}
+                                >
                                   Buat Nudge
                                 </Button>
                               </TableCell>
