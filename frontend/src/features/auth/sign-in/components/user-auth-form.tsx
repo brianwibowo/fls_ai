@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
+import { apiClient } from '@/lib/api-client'
 
 const formSchema = z.object({
   email: z.email({
@@ -55,26 +56,28 @@ export function UserAuthForm({
     setIsLoading(true)
 
     try {
-      // TODO: Replace with actual API call to POST /api/auth/login
-      // For now, mock authentication for development
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      const mockUser = {
-        accountNo: 'USR001',
+      const res = await apiClient.post('/auth/login', {
         email: data.email,
-        role: ['admin'],
-        exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
-      }
+        password: data.password,
+      })
 
-      auth.setUser(mockUser)
-      auth.setAccessToken('mock-access-token')
+      const { access_token, user } = res.data
+
+      auth.setAccessToken(access_token)
+      auth.setUser({
+        accountNo: user.id,
+        email: user.email,
+        role: [user.role.toLowerCase()],
+        exp: Date.now() + 7 * 24 * 60 * 60 * 1000,
+      })
 
       const targetPath = redirectTo || '/'
       navigate({ to: targetPath, replace: true })
 
-      toast.success(`Selamat datang, ${data.email}!`)
-    } catch {
-      toast.error('Login gagal. Periksa email dan password Anda.')
+      toast.success(`Selamat datang kembali, ${user.name}!`)
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Login gagal. Periksa kembali email dan password Anda.'
+      toast.error(message)
     } finally {
       setIsLoading(false)
     }
