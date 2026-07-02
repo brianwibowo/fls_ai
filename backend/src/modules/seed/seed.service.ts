@@ -67,20 +67,24 @@ export class SeedService {
     const protein = await this.prisma.category.create({ data: { name: 'Protein', description: 'Daging, ayam, ikan, dan telur' } });
 
     const productsData = [
-      { sku: 'DRY-001', name: 'Susu Segar Pasteurisasi 1L', categoryId: dairy.id, unit: 'pcs', shelfLifeDays: 7, unitCost: 15000, unitPrice: 19500 },
-      { sku: 'DRY-002', name: 'Yogurt Plain 200ml', categoryId: dairy.id, unit: 'pcs', shelfLifeDays: 14, unitCost: 8000, unitPrice: 11000 },
-      { sku: 'DRY-003', name: 'Keju Mozzarella 250g', categoryId: dairy.id, unit: 'pcs', shelfLifeDays: 30, unitCost: 28000, unitPrice: 38000 },
-      { sku: 'DRY-004', name: 'Mentega Tawar 200g', categoryId: dairy.id, unit: 'pcs', shelfLifeDays: 45, unitCost: 22000, unitPrice: 30000 },
-      { sku: 'BKR-001', name: 'Roti Tawar Gandum', categoryId: bakery.id, unit: 'pcs', shelfLifeDays: 4, unitCost: 12000, unitPrice: 17000 },
-      { sku: 'BKR-002', name: 'Croissant Butter', categoryId: bakery.id, unit: 'pcs', shelfLifeDays: 3, unitCost: 9000, unitPrice: 15000 },
-      { sku: 'BKR-003', name: 'Roti Sobek Cokelat', categoryId: bakery.id, unit: 'pcs', shelfLifeDays: 5, unitCost: 10000, unitPrice: 14500 },
-      { sku: 'PRD-001', name: 'Bayam Segar 250g', categoryId: produce.id, unit: 'pcs', shelfLifeDays: 3, unitCost: 2500, unitPrice: 4000 },
-      { sku: 'PRD-002', name: 'Tomat Cherry 500g', categoryId: produce.id, unit: 'pcs', shelfLifeDays: 7, unitCost: 12000, unitPrice: 18000 },
-      { sku: 'PRD-003', name: 'Wortel Baby 300g', categoryId: produce.id, unit: 'pcs', shelfLifeDays: 10, unitCost: 6000, unitPrice: 9000 },
-      { sku: 'PRD-004', name: 'Pisang Cavendish Sisir', categoryId: produce.id, unit: 'pcs', shelfLifeDays: 6, unitCost: 15000, unitPrice: 22000 },
-      { sku: 'PTN-001', name: 'Dada Ayam Fillet 500g', categoryId: protein.id, unit: 'pcs', shelfLifeDays: 4, unitCost: 32000, unitPrice: 45000 },
-      { sku: 'PTN-002', name: 'Ikan Salmon Fillet 200g', categoryId: protein.id, unit: 'pcs', shelfLifeDays: 3, unitCost: 55000, unitPrice: 75000 },
-      { sku: 'PTN-003', name: 'Telur Ayam Omega 10s', categoryId: protein.id, unit: 'pcs', shelfLifeDays: 14, unitCost: 20000, unitPrice: 28000 },
+      // Dairy
+      { sku: 'DRY-001', name: 'Susu Segar Pasteurisasi 1L', categoryId: dairy.id, unit: 'pcs', shelfLifeDays: 7, unitCost: 15000, unitPrice: 19500, imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&q=80&w=200' },
+      { sku: 'DRY-002', name: 'Yogurt Plain 200ml', categoryId: dairy.id, unit: 'pcs', shelfLifeDays: 14, unitCost: 8000, unitPrice: 11000, imageUrl: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&q=80&w=200' },
+      { sku: 'DRY-003', name: 'Keju Mozzarella 250g', categoryId: dairy.id, unit: 'pcs', shelfLifeDays: 30, unitCost: 28000, unitPrice: 38000, imageUrl: 'https://images.unsplash.com/photo-1552763442-15967bfb41e8?auto=format&fit=crop&q=80&w=200' },
+      { sku: 'DRY-004', name: 'Mentega Tawar 200g', categoryId: dairy.id, unit: 'pcs', shelfLifeDays: 45, unitCost: 22000, unitPrice: 30000, imageUrl: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&q=80&w=200' },
+      // Bakery
+      { sku: 'BKR-001', name: 'Roti Tawar Gandum', categoryId: bakery.id, unit: 'pcs', shelfLifeDays: 4, unitCost: 12000, unitPrice: 17000, imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=200' },
+      { sku: 'BKR-002', name: 'Croissant Butter', categoryId: bakery.id, unit: 'pcs', shelfLifeDays: 3, unitCost: 9000, unitPrice: 15000, imageUrl: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&q=80&w=200' },
+      { sku: 'BKR-003', name: 'Roti Sobek Cokelat', categoryId: bakery.id, unit: 'pcs', shelfLifeDays: 5, unitCost: 10000, unitPrice: 14500, imageUrl: 'https://images.unsplash.com/photo-1549931319-a545dcf3bc73?auto=format&fit=crop&q=80&w=200' },
+      // Produce
+      { sku: 'PRD-001', name: 'Bayam Segar 250g', categoryId: produce.id, unit: 'pcs', shelfLifeDays: 3, unitCost: 2500, unitPrice: 4000, imageUrl: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&q=80&w=200' },
+      { sku: 'PRD-002', name: 'Tomat Cherry 500g', categoryId: produce.id, unit: 'pcs', shelfLifeDays: 7, unitCost: 12000, unitPrice: 18000, imageUrl: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=200' },
+      { sku: 'PRD-003', name: 'Wortel Baby 300g', categoryId: produce.id, unit: 'pcs', shelfLifeDays: 10, unitCost: 6000, unitPrice: 9000, imageUrl: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&q=80&w=200' },
+      { sku: 'PRD-004', name: 'Pisang Cavendish Sisir', categoryId: produce.id, unit: 'pcs', shelfLifeDays: 6, unitCost: 15000, unitPrice: 22000, imageUrl: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&q=80&w=200' },
+      // Protein
+      { sku: 'PTN-001', name: 'Dada Ayam Fillet 500g', categoryId: protein.id, unit: 'pcs', shelfLifeDays: 4, unitCost: 32000, unitPrice: 45000, imageUrl: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=200' },
+      { sku: 'PTN-002', name: 'Ikan Salmon Fillet 200g', categoryId: protein.id, unit: 'pcs', shelfLifeDays: 3, unitCost: 55000, unitPrice: 75000, imageUrl: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&q=80&w=200' },
+      { sku: 'PTN-003', name: 'Telur Ayam Omega 10s', categoryId: protein.id, unit: 'pcs', shelfLifeDays: 14, unitCost: 20000, unitPrice: 28000, imageUrl: 'https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?auto=format&fit=crop&q=80&w=200' },
     ];
 
     const products = [];
