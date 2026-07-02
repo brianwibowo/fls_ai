@@ -48,7 +48,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { useInventoryQuery, useInventorySummaryQuery, useUpdateProductMutation, useCreateBatchMutation, useProductsQuery } from '@/hooks/use-api'
+import { useInventoryQuery, useInventorySummaryQuery, useUpdateProductMutation, useCreateBatchMutation, useProductsQuery, useCreateProductMutation } from '@/hooks/use-api'
 import { TableSkeleton } from '@/components/page-skeletons'
 
 // --- Helpers ---
@@ -133,7 +133,8 @@ export function Inventory() {
 
   const [batchDialogOpen, setBatchDialogOpen] = useState(false)
   const [newBatchData, setNewBatchData] = useState({
-    productId: '',
+    productName: '',
+    categoryName: 'Produce',
     batchCode: '',
     quantityReceived: 50,
     receivedDate: new Date().toISOString().split('T')[0],
@@ -141,26 +142,73 @@ export function Inventory() {
   })
 
   const createBatch = useCreateBatchMutation()
+  const createProduct = useCreateProductMutation()
   const { data: products } = useProductsQuery()
 
+  const capitalizeWords = (str: string) => {
+    return str.replace(/\b\w/g, (char) => char.toUpperCase())
+  }
+
   const handleCreateBatch = async () => {
-    if (!newBatchData.productId || !newBatchData.batchCode || !newBatchData.quantityReceived) {
+    if (!newBatchData.productName || !newBatchData.batchCode || !newBatchData.quantityReceived) {
       toast.error('Harap isi semua kolom.')
       return
     }
     try {
+      // Find category ID from category name
+      const categoryMap: Record<string, string> = {}
+      products?.forEach((p: any) => {
+        if (p.category && p.categoryId) {
+          categoryMap[p.category.name] = p.categoryId
+        }
+      })
+
+      const targetCategoryId = categoryMap[newBatchData.categoryName]
+      if (!targetCategoryId) {
+        toast.error('Kategori tidak valid.')
+        return
+      }
+
+      // Check if product already exists
+      const existingProduct = products?.find(
+        (p: any) => p.name.toLowerCase() === newBatchData.productName.toLowerCase()
+      )
+
+      let targetProductId = existingProduct?.id
+
+      // If product does not exist, create it first
+      if (!targetProductId) {
+        const prefix = newBatchData.categoryName.substring(0, 3).toUpperCase()
+        const randomNum = Math.floor(100 + Math.random() * 900)
+        const generatedSku = `${prefix}-${randomNum}`
+
+        const createdProduct = await createProduct.mutateAsync({
+          sku: generatedSku,
+          name: newBatchData.productName,
+          categoryId: targetCategoryId,
+          unit: 'pcs',
+          shelfLifeDays: 7,
+          unitCost: 10000,
+          unitPrice: 15000,
+        })
+        targetProductId = createdProduct.id
+      }
+
+      // Create batch
       await createBatch.mutateAsync({
-        productId: newBatchData.productId,
+        productId: targetProductId,
         batchCode: newBatchData.batchCode,
         quantityReceived: Number(newBatchData.quantityReceived),
         receivedDate: new Date(newBatchData.receivedDate).toISOString(),
         expiryDate: new Date(newBatchData.expiryDate).toISOString(),
       })
+
       toast.success('Batch baru berhasil ditambahkan!')
       setBatchDialogOpen(false)
       // Reset form
       setNewBatchData({
-        productId: '',
+        productName: '',
+        categoryName: 'Produce',
         batchCode: '',
         quantityReceived: 50,
         receivedDate: new Date().toISOString().split('T')[0],
@@ -285,7 +333,7 @@ export function Inventory() {
             />
           </div>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className='w-[150px]'>
+            <SelectTrigger className='w-[170px]'>
               <SelectValue placeholder='Kategori' />
             </SelectTrigger>
             <SelectContent>
@@ -568,17 +616,29 @@ export function Inventory() {
             </DialogHeader>
             <div className='flex flex-col space-y-4 py-4 text-start'>
               <div className='space-y-1'>
-                <label className='text-xs font-semibold text-muted-foreground'>Pilih Produk</label>
-                <Select value={newBatchData.productId} onValueChange={(val) => setNewBatchData(p => ({ ...p, productId: val }))}>
+                <label className='text-xs font-semibold text-muted-foreground'>Nama Produk</label>
+                <Input
+                  placeholder='Contoh: Tomat Cherry Segar'
+                  value={newBatchData.productName}
+                  onChange={(e) => {
+                    setNewBatchData(p => ({
+                      ...p,
+                      productName: capitalizeWords(e.target.value)
+                    }))
+                  }}
+                />
+              </div>
+              <div className='space-y-1'>
+                <label className='text-xs font-semibold text-muted-foreground'>Kategori</label>
+                <Select value={newBatchData.categoryName} onValueChange={(val) => setNewBatchData(p => ({ ...p, categoryName: val }))}>
                   <SelectTrigger className='cursor-pointer'>
-                    <SelectValue placeholder='Pilih produk...' />
+                    <SelectValue placeholder='Pilih kategori...' />
                   </SelectTrigger>
                   <SelectContent>
-                    {products?.map((p: any) => (
-                      <SelectItem key={p.id} value={p.id} className='cursor-pointer'>
-                        {p.name} ({p.sku})
-                      </SelectItem>
-                    ))}
+                    <SelectItem value='Produce' className='cursor-pointer'>Produce (Sayuran & Buah)</SelectItem>
+                    <SelectItem value='Dairy' className='cursor-pointer'>Dairy (Susu & Telur)</SelectItem>
+                    <SelectItem value='Bakery' className='cursor-pointer'>Bakery (Roti & Kue)</SelectItem>
+                    <SelectItem value='Protein' className='cursor-pointer'>Protein (Daging & Ayam)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -292,3 +292,17 @@ export function useUpdateProductMutation() {
   })
 }
 
+export function useCreateProductMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: { sku: string; name: string; categoryId: string; unit: string; shelfLifeDays: number; unitCost: number; unitPrice: number; imageUrl?: string }) => {
+      const { data } = await apiClient.post('/products', payload)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['inventory'] })
+    },
+  })
+}
+

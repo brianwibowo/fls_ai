@@ -121,6 +121,10 @@ export function Nudging() {
     productId: '',
   })
 
+  const capitalizeWords = (str: string) => {
+    return str.replace(/\b\w/g, (char) => char.toUpperCase())
+  }
+
   // Auto-open and prefill if navigated with query param
   useEffect(() => {
     if (search.createNudgeForProductId) {
@@ -511,7 +515,7 @@ export function Nudging() {
                 <Input
                   placeholder='Contoh: Flash Sale Bayam Hijau'
                   value={newNudgeData.name}
-                  onChange={(e) => setNewNudgeData(p => ({ ...p, name: e.target.value }))}
+                  onChange={(e) => setNewNudgeData(p => ({ ...p, name: capitalizeWords(e.target.value) }))}
                 />
               </div>
               <div className='grid grid-cols-2 gap-3'>

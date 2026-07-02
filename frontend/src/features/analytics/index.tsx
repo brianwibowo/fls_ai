@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils'
 import {
   TrendingDown,
   ShoppingCart,
@@ -7,6 +8,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Loader2,
+  Sparkles,
 } from 'lucide-react'
 import {
   Card,
@@ -60,17 +62,6 @@ function getInsightIcon(type: string) {
       return <CheckCircle className='h-5 w-5 text-green-500' />
     default:
       return <Lightbulb className='h-5 w-5 text-blue-500' />
-  }
-}
-
-function getInsightBorder(type: string) {
-  switch (type) {
-    case 'warning':
-      return 'border-l-orange-500'
-    case 'success':
-      return 'border-l-green-500'
-    default:
-      return 'border-l-blue-500'
   }
 }
 
@@ -327,28 +318,51 @@ export function Analytics() {
 
           {/* AI Insights Tab */}
           <TabsContent value='insights'>
-            <div className='space-y-3'>
+            <div className='mb-6 p-4 rounded-xl border bg-emerald-500/5 text-start border-emerald-500/10 flex items-start gap-3'>
+              <Sparkles className='h-5 w-5 text-emerald-600 shrink-0 mt-0.5' />
+              <div>
+                <h3 className='font-semibold text-emerald-950 dark:text-emerald-50 text-sm'>Rekomendasi Rantai Pasok Berbasis AI</h3>
+                <p className='text-xs text-muted-foreground mt-0.5 leading-relaxed'>
+                  Insight berikut dihasilkan secara dinamis menggunakan model prediktif untuk memitigasi food waste dan mengoptimalkan persediaan Anda.
+                </p>
+              </div>
+            </div>
+            
+            <div className='grid gap-4 sm:grid-cols-2'>
               {isInsightsLoading ? (
-                <div className='flex h-40 items-center justify-center'>
+                <div className='flex h-40 items-center justify-center col-span-2'>
                   <Loader2 className='h-8 w-8 animate-spin text-green-600' />
                 </div>
               ) : (
-                insightsData && insightsData.map((insight: any) => (
-                  <Card
-                    key={insight.id}
-                    className={`border-l-4 ${getInsightBorder(insight.type)}`}
-                  >
-                    <CardContent className='flex items-start gap-3 py-4'>
-                      {getInsightIcon(insight.type)}
-                      <div className='flex-1 text-start'>
-                        <p className='text-sm'>{insight.text}</p>
-                        <p className='mt-1 text-xs text-muted-foreground'>
-                          Kategori: {insight.category}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                insightsData && insightsData.map((insight: any) => {
+                  const type = insight.type
+                  const bgColor = type === 'warning' ? 'bg-amber-50/50 dark:bg-amber-950/10 border-amber-200/60 dark:border-amber-900/30' : type === 'success' ? 'bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-200/60 dark:border-emerald-900/30' : 'bg-blue-50/50 dark:bg-blue-950/10 border-blue-200/60 dark:border-blue-900/30'
+                  
+                  return (
+                    <Card
+                      key={insight.id}
+                      className={cn('transition-all duration-200 border shadow-xs hover:shadow-md', bgColor)}
+                    >
+                      <CardContent className='flex items-start gap-3.5 p-5'>
+                        <div className='p-2 rounded-lg bg-background border shadow-2xs shrink-0'>
+                          {getInsightIcon(insight.type)}
+                        </div>
+                        <div className='flex-1 text-start flex flex-col justify-between h-full min-h-[70px]'>
+                          <div>
+                            <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1'>
+                              Kategori: {insight.category}
+                            </p>
+                            <p className='text-sm font-medium leading-relaxed text-foreground'>{insight.text}</p>
+                          </div>
+                          <div className='mt-3 flex items-center justify-between text-xs text-muted-foreground border-t border-border/50 pt-2'>
+                            <span>Rekomendasi Sistem</span>
+                            <span className='font-semibold text-emerald-600 dark:text-emerald-400'>Aktif</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })
               )}
             </div>
           </TabsContent>

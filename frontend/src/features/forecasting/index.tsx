@@ -242,7 +242,7 @@ export function Forecasting() {
                         <TableHead className='text-right'>Current Stock</TableHead>
                         <TableHead className='text-right'>Recommended</TableHead>
                         <TableHead className='text-center'>Urgency</TableHead>
-                        <TableHead className='max-w-[300px]'>AI Reasoning</TableHead>
+                        <TableHead className='max-w-[320px]'>AI Reasoning</TableHead>
                         <TableHead>Action</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -267,7 +267,7 @@ export function Forecasting() {
                                 {rec.urgency}
                               </Badge>
                             </TableCell>
-                            <TableCell className='max-w-[300px] text-xs text-muted-foreground'>
+                            <TableCell className='max-w-[320px] whitespace-normal break-words text-xs text-muted-foreground leading-relaxed'>
                               {rec.aiReasoning}
                             </TableCell>
                             <TableCell>
