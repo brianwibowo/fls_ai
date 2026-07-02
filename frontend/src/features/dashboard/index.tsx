@@ -99,7 +99,7 @@ function SustainabilityScoreCard({ score }: { score: number }) {
             />
           </svg>
           <div className='absolute flex flex-col items-center'>
-            <span className='text-2xl font-bold'>{score}%</span>
+            <span className='text-lg font-bold tracking-tight'>{score}%</span>
           </div>
         </div>
         <p className='mt-2 flex items-center text-xs text-green-600'>
