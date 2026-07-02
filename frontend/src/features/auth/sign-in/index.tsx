@@ -1,30 +1,99 @@
-import { useSearch } from '@tanstack/react-router'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { AuthLayout } from '../auth-layout'
+import { Link, useSearch } from '@tanstack/react-router'
+import { Leaf } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import dashboardDark from './assets/dashboard-dark.png'
+import dashboardLight from './assets/dashboard-light.png'
 import { UserAuthForm } from './components/user-auth-form'
 
 export function SignIn() {
   const { redirect } = useSearch({ from: '/(auth)/sign-in' })
 
   return (
-    <AuthLayout>
-      <Card className='max-w-sm gap-4'>
-        <CardHeader>
-          <CardTitle className='text-lg tracking-tight'>Masuk</CardTitle>
-          <CardDescription>
-            Masukkan email dan password untuk mengakses dashboard Freashday.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className='relative container grid h-svh flex-col items-center justify-center lg:max-w-none lg:grid-cols-2 lg:px-0'>
+      {/* Left Column: Visual UI / Branding */}
+      <div
+        className={cn(
+          'relative h-full overflow-hidden bg-emerald-950 max-lg:hidden flex flex-col justify-between p-10 text-white',
+          'border-r border-emerald-900'
+        )}
+      >
+        {/* Background gradient/glow effect */}
+        <div className='absolute inset-0 bg-radial-gradient from-emerald-900/40 via-transparent to-transparent pointer-events-none' />
+
+        {/* Brand header */}
+        <div className='relative z-20 flex items-center gap-2 text-lg font-medium'>
+          <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500 text-emerald-950 font-bold'>
+            <Leaf className='h-5 w-5' />
+          </div>
+          <span className='font-bold tracking-tight'>Freashday</span>
+        </div>
+
+        {/* Dashboard visual showcase */}
+        <div className='relative z-20 my-auto w-full max-w-lg mx-auto flex flex-col gap-6 text-start'>
+          <div className='space-y-3'>
+            <h1 className='text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight'>
+              Smart Agriculture & Fresh Food Logistics
+            </h1>
+            <p className='text-emerald-200/80 text-sm leading-relaxed max-w-md'>
+              Sistem manajemen rantai pasok berbasis AI untuk mengoptimalkan stok, memprediksi permintaan secara presisi, dan memitigasi food waste.
+            </p>
+          </div>
+
+          {/* Screenshot container */}
+          <div className='relative rounded-xl border border-emerald-800 bg-emerald-950/50 p-2 shadow-2xl backdrop-blur-xs overflow-hidden mt-2 aspect-video'>
+            <img
+              src={dashboardLight}
+              className='rounded-lg object-cover object-top h-full w-full dark:hidden border border-emerald-900/50'
+              alt='Freashday Dashboard Light'
+            />
+            <img
+              src={dashboardDark}
+              className='rounded-lg object-cover object-top h-full w-full hidden dark:block border border-emerald-900/50'
+              alt='Freashday Dashboard Dark'
+            />
+          </div>
+        </div>
+
+        {/* Footer info */}
+        <div className='relative z-20 text-xs text-emerald-300/60'>
+          © {new Date().getFullYear()} Freashday Food Logistics System. Powered by AI.
+        </div>
+      </div>
+
+      {/* Right Column: Form Input */}
+      <div className='lg:p-8 flex items-center justify-center w-full h-full bg-background'>
+        <div className='mx-auto flex w-full flex-col justify-center space-y-6 max-w-sm p-6 sm:p-8 border rounded-xl shadow-md bg-card'>
+          <div className='flex flex-col space-y-2 text-start'>
+            <h2 className='text-2xl font-bold tracking-tight text-foreground'>Masuk ke Akun</h2>
+            <p className='text-sm text-muted-foreground'>
+              Masukkan email dan password untuk mengakses dashboard sistem.
+            </p>
+          </div>
+
           <UserAuthForm redirectTo={redirect} />
-        </CardContent>
-      </Card>
-    </AuthLayout>
+
+          <div className='flex flex-col gap-2.5 pt-4 border-t border-border/40 text-xs text-muted-foreground'>
+            <div className='flex justify-between items-center'>
+              <span>Lupa password?</span>
+              <Link
+                to='/forgot-password'
+                className='font-semibold text-primary underline underline-offset-4 hover:text-primary/80'
+              >
+                Atur Ulang
+              </Link>
+            </div>
+            <div className='flex justify-between items-center'>
+              <span>Belum punya akun?</span>
+              <Link
+                to='/sign-up'
+                className='font-semibold text-primary underline underline-offset-4 hover:text-primary/80'
+              >
+                Daftar Baru
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
