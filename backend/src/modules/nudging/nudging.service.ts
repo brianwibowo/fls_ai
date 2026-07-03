@@ -35,6 +35,9 @@ export class NudgingService {
   }
 
   async findAll() {
+    if (process.env.NODE_ENV !== 'production') {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
     return this.prisma.nudgeStrategy.findMany({
       include: {
         products: {
@@ -74,6 +77,9 @@ export class NudgingService {
   }
 
   async getPreview() {
+    if (process.env.NODE_ENV !== 'production') {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
     const activeNudges = await this.prisma.nudgeStrategy.findMany({
       where: { status: NudgeStatus.ACTIVE },
       include: {
@@ -146,6 +152,9 @@ export class NudgingService {
   }
 
   async getLogs() {
+    if (process.env.NODE_ENV !== 'production') {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
     return this.prisma.nudgeActivityLog.findMany({
       include: {
         nudge: true,
@@ -167,6 +176,9 @@ export class NudgingService {
   }
 
   async getSummary() {
+    if (process.env.NODE_ENV !== 'production') {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
     const logs = await this.prisma.nudgeActivityLog.findMany();
     const impressions = logs.filter((l) => l.eventType === NudgeEventType.IMPRESSION).length;
     const clicks = logs.filter((l) => l.eventType === NudgeEventType.CLICK).length;

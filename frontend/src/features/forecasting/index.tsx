@@ -6,6 +6,7 @@ import {
   DollarSign,
   ArrowUpRight,
   Loader2,
+  RefreshCw,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth-store'
 import {
@@ -81,10 +82,19 @@ export function Forecasting() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.auth.user)
   const userRole = user?.role?.[0] // 'admin', 'logistics_manager', 'marketing_manager'
-  const { data: forecastDemandData, isLoading: isDemandLoading } = useForecastDemandQuery()
-  const { data: reorderData, isLoading: isReorderLoading } = useReorderQuery()
-  const { data: wasteRiskData, isLoading: isWasteLoading } = useWasteRiskQuery()
-  const { data: summaryData } = useForecastingSummaryQuery()
+  const { data: forecastDemandData, isLoading: isDemandLoading, refetch: refetchDemand, isRefetching: isRefetchingDemand } = useForecastDemandQuery()
+  const { data: reorderData, isLoading: isReorderLoading, refetch: refetchReorder, isRefetching: isRefetchingReorder } = useReorderQuery()
+  const { data: wasteRiskData, isLoading: isWasteLoading, refetch: refetchWaste, isRefetching: isRefetchingWaste } = useWasteRiskQuery()
+  const { data: summaryData, refetch: refetchSummary, isRefetching: isRefetchingSummary } = useForecastingSummaryQuery()
+
+  const isRefreshing = isRefetchingDemand || isRefetchingReorder || isRefetchingWaste || isRefetchingSummary
+
+  const handleRefresh = () => {
+    refetchDemand()
+    refetchReorder()
+    refetchWaste()
+    refetchSummary()
+  }
 
   const generateForecast = useGenerateForecastMutation()
   const updateReorderStatus = useUpdateReorderStatusMutation()
@@ -142,12 +152,24 @@ export function Forecasting() {
               Prediksi permintaan & rekomendasi reorder berbasis data historis
             </p>
           </div>
-          <Button onClick={handleGenerate} disabled={generateForecast.isPending}>
-            {generateForecast.isPending ? (
-              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-            ) : null}
-            Generate Forecast
-          </Button>
+          <div className='flex items-center gap-2'>
+            <Button
+              size='sm'
+              variant='outline'
+              className='cursor-pointer gap-1.5'
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Perbarui Data
+            </Button>
+            <Button size='sm' onClick={handleGenerate} disabled={generateForecast.isPending}>
+              {generateForecast.isPending ? (
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+              ) : null}
+              Generate Forecast
+            </Button>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -192,8 +214,8 @@ export function Forecasting() {
                   aktual demand (bar hijau) — 7 hari terakhir + 2 hari prediksi
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                {isDemandLoading ? (
+               <CardContent>
+                {isDemandLoading || isRefreshing ? (
                   <div className='flex h-[300px] items-center justify-center'>
                     <Loader2 className='h-8 w-8 animate-spin text-green-600' />
                   </div>
@@ -235,8 +257,8 @@ export function Forecasting() {
                   Daftar produk dengan risiko pembusukan tinggi berdasarkan sisa umur simpan dan tren penjualan.
                 </CardDescription>
               </CardHeader>
-              <CardContent className='p-0'>
-                {isWasteLoading ? (
+               <CardContent className='p-0'>
+                {isWasteLoading || isRefreshing ? (
                   <div className='flex h-40 items-center justify-center'>
                     <Loader2 className='h-8 w-8 animate-spin text-green-600' />
                   </div>
@@ -322,8 +344,8 @@ export function Forecasting() {
           {/* Reorder Recommendations Tab */}
           <TabsContent value='reorder'>
             <Card>
-              <CardContent className='p-0'>
-                {isReorderLoading ? (
+               <CardContent className='p-0'>
+                {isReorderLoading || isRefreshing ? (
                   <div className='flex h-40 items-center justify-center'>
                     <Loader2 className='h-8 w-8 animate-spin text-green-600' />
                   </div>

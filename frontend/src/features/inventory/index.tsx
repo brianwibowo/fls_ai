@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Package } from 'lucide-react'
+import { Plus, Package, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Header } from '@/components/layout/header'
@@ -80,7 +80,7 @@ export function Inventory() {
     }
   }
 
-  const { data: rawInventory, isLoading } = useInventoryQuery({
+  const { data: rawInventory, isLoading, refetch: refetchInventory, isRefetching: isRefetchingInventory } = useInventoryQuery({
     category: categoryFilter,
     risk: riskFilter,
     search: searchQuery,
@@ -193,7 +193,14 @@ export function Inventory() {
     }
   }
 
-  const { data: summaryData } = useInventorySummaryQuery()
+  const { data: summaryData, refetch: refetchSummary, isRefetching: isRefetchingSummary } = useInventorySummaryQuery()
+
+  const isRefreshing = isRefetchingInventory || isRefetchingSummary
+
+  const handleRefresh = () => {
+    refetchInventory()
+    refetchSummary()
+  }
 
   const suggestions = newBatchData.productName
     ? products?.filter((p: any) =>
@@ -257,12 +264,24 @@ export function Inventory() {
               Pemantauan stok, kategori produk, dan status risiko kadaluarsa
             </p>
           </div>
-          {userRole !== 'marketing_manager' && (
-            <Button onClick={() => setBatchDialogOpen(true)} className='cursor-pointer'>
-              <Plus className='mr-2 h-4 w-4' />
-              Tambah Batch
+          <div className='flex items-center gap-2'>
+            <Button
+              size='sm'
+              variant='outline'
+              className='cursor-pointer gap-1.5'
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Perbarui Data
             </Button>
-          )}
+            {userRole !== 'marketing_manager' && (
+              <Button size='sm' onClick={() => setBatchDialogOpen(true)} className='cursor-pointer'>
+                <Plus className='mr-2 h-4 w-4' />
+                Tambah Batch
+              </Button>
+            )}
+          </div>
         </div>
 
         <InventorySummaryCards summaryData={summaryData} />
@@ -281,7 +300,7 @@ export function Inventory() {
         />
 
         <div className='mt-4 rounded-xl border bg-card p-4 text-card-foreground shadow-xs'>
-          {isLoading ? (
+          {isLoading || isRefreshing ? (
             <TableSkeleton cols={viewMode === 'list' ? 10 : 4} rows={itemsPerPage} />
           ) : paginatedInventory.length > 0 ? (
             viewMode === 'list' ? (

@@ -30,6 +30,11 @@ export class InventoryService {
   }
 
   async findAll(category?: string, risk?: string, search?: string) {
+    // Simulasikan delay pemrosesan selama 1 detik agar visual loading/skeleton di frontend terlihat (hanya di development)
+    if (process.env.NODE_ENV !== 'production') {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
     const where: any = {
       quantityCurrent: { gt: 0 },
       status: BatchStatus.ACTIVE,
@@ -126,6 +131,11 @@ export class InventoryService {
   }
 
   async getSummary() {
+    // Simulasikan delay pemrosesan selama 1 detik agar visual loading/skeleton di frontend terlihat (hanya di development)
+    if (process.env.NODE_ENV !== 'production') {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
     const activeBatches = await this.findAll('all', 'all', '');
     const now = new Date();
     now.setHours(0, 0, 0, 0);

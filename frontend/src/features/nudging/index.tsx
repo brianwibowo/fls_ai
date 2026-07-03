@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
+import { Plus, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Header } from '@/components/layout/header'
@@ -40,10 +40,19 @@ const route = getRouteApi('/_authenticated/nudging')
 
 export function Nudging() {
   const search = route.useSearch()
-  const { data: strategiesData, isLoading: isStrategiesLoading } = useNudgeStrategiesQuery()
-  const { data: previewData, isLoading: isPreviewLoading } = useNudgePreviewsQuery()
-  const { data: logsData, isLoading: isLogsLoading } = useNudgeLogsQuery()
-  const { data: summaryData } = useNudgingSummaryQuery()
+  const { data: strategiesData, isLoading: isStrategiesLoading, refetch: refetchStrategies, isRefetching: isRefetchingStrategies } = useNudgeStrategiesQuery()
+  const { data: previewData, isLoading: isPreviewLoading, refetch: refetchPreviews, isRefetching: isRefetchingPreviews } = useNudgePreviewsQuery()
+  const { data: logsData, isLoading: isLogsLoading, refetch: refetchLogs, isRefetching: isRefetchingLogs } = useNudgeLogsQuery()
+  const { data: summaryData, refetch: refetchSummary, isRefetching: isRefetchingSummary } = useNudgingSummaryQuery()
+
+  const isRefreshing = isRefetchingStrategies || isRefetchingPreviews || isRefetchingLogs || isRefetchingSummary
+
+  const handleRefresh = () => {
+    refetchStrategies()
+    refetchPreviews()
+    refetchLogs()
+    refetchSummary()
+  }
 
   const updateNudge = useUpdateNudgeMutation()
   const createNudge = useCreateNudgeMutation()
@@ -168,10 +177,22 @@ export function Nudging() {
               Rancang promosi pintar dan label urgensi berbasis sisa umur simpan produk
             </p>
           </div>
-          <Button onClick={() => setNudgeDialogOpen(true)} className='cursor-pointer bg-green-600 hover:bg-green-700 text-white'>
-            <Plus className='mr-2 h-4 w-4' />
-            Buat Strategi
-          </Button>
+          <div className='flex items-center gap-2'>
+            <Button
+              size='sm'
+              variant='outline'
+              className='cursor-pointer gap-1.5'
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Perbarui Data
+            </Button>
+            <Button size='sm' onClick={() => setNudgeDialogOpen(true)} className='cursor-pointer bg-green-600 hover:bg-green-700 text-white'>
+              <Plus className='mr-2 h-4 w-4' />
+              Buat Strategi
+            </Button>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -186,7 +207,7 @@ export function Nudging() {
 
           {/* Strategies Tab */}
           <TabsContent value='strategies'>
-            {isStrategiesLoading ? (
+            {isStrategiesLoading || isRefreshing ? (
               <div className='flex h-40 items-center justify-center'>
                 <span className='text-sm text-muted-foreground'>Memuat data...</span>
               </div>
@@ -206,7 +227,7 @@ export function Nudging() {
 
           {/* Activity Logs Tab */}
           <TabsContent value='logs'>
-            {isLogsLoading ? (
+            {isLogsLoading || isRefreshing ? (
               <div className='flex h-40 items-center justify-center'>
                 <span className='text-sm text-muted-foreground'>Memuat data...</span>
               </div>
@@ -234,7 +255,7 @@ export function Nudging() {
             </p>
           </div>
 
-          {isPreviewLoading ? (
+          {isPreviewLoading || isRefreshing ? (
             <div className='flex h-40 items-center justify-center border rounded-lg bg-muted/5'>
               <span className='text-sm text-muted-foreground'>Memuat pratinjau...</span>
             </div>

@@ -20,6 +20,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -68,10 +69,19 @@ function getInsightIcon(type: string) {
 // --- Main Component ---
 
 export function Analytics() {
-  const { data: overview, isLoading: isOverviewLoading } = useAnalyticsOverviewQuery()
-  const { data: trendsData, isLoading: isTrendsLoading } = useAnalyticsTrendsQuery()
-  const { data: categoryData, isLoading: isCategoryLoading } = useAnalyticsCategoryQuery()
-  const { data: insightsData, isLoading: isInsightsLoading } = useAnalyticsInsightsQuery()
+  const { data: overview, isLoading: isOverviewLoading, refetch: refetchOverview, isRefetching: isRefetchingOverview } = useAnalyticsOverviewQuery()
+  const { data: trendsData, isLoading: isTrendsLoading, refetch: refetchTrends, isRefetching: isRefetchingTrends } = useAnalyticsTrendsQuery()
+  const { data: categoryData, isLoading: isCategoryLoading, refetch: refetchCategory, isRefetching: isRefetchingCategory } = useAnalyticsCategoryQuery()
+  const { data: insightsData, isLoading: isInsightsLoading, refetch: refetchInsights, isRefetching: isRefetchingInsights } = useAnalyticsInsightsQuery()
+
+  const isRefreshing = isRefetchingOverview || isRefetchingTrends || isRefetchingCategory || isRefetchingInsights
+
+  const handleRefresh = () => {
+    refetchOverview()
+    refetchTrends()
+    refetchCategory()
+    refetchInsights()
+  }
 
   const kpiCards = [
     { title: 'Waste Reduction', value: overview?.wasteReduction ?? 87.5, target: 90, icon: TrendingDown },
@@ -103,18 +113,30 @@ export function Analytics() {
       </Header>
 
       <Main>
-        <div className='mb-2'>
-          <h1 className='text-2xl font-bold tracking-tight'>
-            Analytics & Performance
-          </h1>
-          <p className='text-sm text-muted-foreground'>
-            Evaluasi dampak sistem terhadap efisiensi logistik dan reduksi food loss
-          </p>
+        <div className='mb-2 flex items-center justify-between'>
+          <div>
+            <h1 className='text-2xl font-bold tracking-tight'>
+              Analytics & Performance
+            </h1>
+            <p className='text-sm text-muted-foreground'>
+              Evaluasi dampak sistem terhadap efisiensi logistik dan reduksi food loss
+            </p>
+          </div>
+          <Button
+            size='sm'
+            variant='outline'
+            className='cursor-pointer gap-1.5'
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Perbarui Data
+          </Button>
         </div>
 
         {/* KPI Cards with Progress */}
         <div className='mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-          {isOverviewLoading ? (
+          {isOverviewLoading || isRefreshing ? (
             <div className='col-span-full flex h-20 items-center justify-center'>
               <Loader2 className='h-6 w-6 animate-spin text-green-600' />
             </div>
@@ -177,7 +199,7 @@ export function Analytics() {
           </div>
 
           <div className='grid gap-4 sm:grid-cols-2'>
-            {isInsightsLoading ? (
+            {isInsightsLoading || isRefreshing ? (
               <div className='flex h-40 items-center justify-center col-span-2'>
                 <Loader2 className='h-8 w-8 animate-spin text-green-600' />
               </div>
@@ -224,7 +246,7 @@ export function Analytics() {
 
           {/* Trend Analysis Tab */}
           <TabsContent value='trends'>
-            {isTrendsLoading ? (
+            {isTrendsLoading || isRefreshing ? (
               <div className='flex h-40 items-center justify-center'>
                 <Loader2 className='h-8 w-8 animate-spin text-green-600' />
               </div>
@@ -291,7 +313,7 @@ export function Analytics() {
 
           {/* Category Performance Tab */}
           <TabsContent value='category'>
-            {isCategoryLoading ? (
+            {isCategoryLoading || isRefreshing ? (
               <div className='flex h-40 items-center justify-center'>
                 <Loader2 className='h-8 w-8 animate-spin text-green-600' />
               </div>

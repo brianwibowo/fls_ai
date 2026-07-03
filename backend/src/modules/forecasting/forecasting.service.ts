@@ -121,6 +121,9 @@ export class ForecastingService {
   }
 
   async getDemandForecasts() {
+    if (process.env.NODE_ENV !== 'production') {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
     return this.prisma.demandForecast.findMany({
       include: { product: true },
       orderBy: { forecastDate: 'asc' },
@@ -128,6 +131,9 @@ export class ForecastingService {
   }
 
   async getReorders() {
+    if (process.env.NODE_ENV !== 'production') {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
     return this.prisma.reorderRecommendation.findMany({
       where: { status: ReorderStatus.PENDING },
       include: { product: true },
@@ -143,6 +149,9 @@ export class ForecastingService {
   }
 
   async getWasteRisk() {
+    if (process.env.NODE_ENV !== 'production') {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
     const products = await this.prisma.product.findMany({
       where: { isActive: true },
       include: {
@@ -197,6 +206,9 @@ export class ForecastingService {
   }
 
   async getSummary() {
+    if (process.env.NODE_ENV !== 'production') {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
     const reorders = await this.getReorders();
     const wasteRisk = await this.getWasteRisk();
 
