@@ -29,6 +29,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   ResponsiveContainer,
   ComposedChart,
   Line,
@@ -53,7 +60,7 @@ import {
   useUpdateReorderStatusMutation,
 } from '@/hooks/use-api'
 import { toast } from 'sonner'
-
+import { ProductDetailModal } from './components/product-detail-modal'
 // --- Helpers ---
 
 function formatRupiah(value: number): string {
@@ -91,7 +98,11 @@ export function Forecasting() {
   const [reorderSubTab, setReorderSubTab] = useState<'pending' | 'ordered'>('pending')
   const [pendingPage, setPendingPage] = useState(1)
   const [orderedPage, setOrderedPage] = useState(1)
-  const itemsPerPage = 5
+  const [wasteRiskPage, setWasteRiskPage] = useState(1)
+  const [wasteRiskItemsPerPage, setWasteRiskItemsPerPage] = useState(5)
+  const [reorderItemsPerPage, setReorderItemsPerPage] = useState(5)
+  const [detailItem, setDetailItem] = useState<any | null>(null)
+  const [detailOpen, setDetailOpen] = useState(false)
 
   const isRefreshing = isRefetchingDemand || isRefetchingReorder || isRefetchingWaste || isRefetchingSummary
 
@@ -102,17 +113,20 @@ export function Forecasting() {
     refetchSummary()
     setPendingPage(1)
     setOrderedPage(1)
+    setWasteRiskPage(1)
   }
 
   // Filter recommendations based on status
   const pendingReorders = (reorderData || []).filter((r: any) => r.status === 'PENDING')
   const orderedReorders = (reorderData || []).filter((r: any) => r.status === 'ORDERED')
 
-  const totalPendingPages = Math.ceil(pendingReorders.length / itemsPerPage)
-  const totalOrderedPages = Math.ceil(orderedReorders.length / itemsPerPage)
+  const totalPendingPages = Math.ceil(pendingReorders.length / reorderItemsPerPage)
+  const totalOrderedPages = Math.ceil(orderedReorders.length / reorderItemsPerPage)
+  const totalWasteRiskPages = Math.ceil((wasteRiskData || []).length / wasteRiskItemsPerPage)
 
-  const paginatedPending = pendingReorders.slice((pendingPage - 1) * itemsPerPage, pendingPage * itemsPerPage)
-  const paginatedOrdered = orderedReorders.slice((orderedPage - 1) * itemsPerPage, orderedPage * itemsPerPage)
+  const paginatedPending = pendingReorders.slice((pendingPage - 1) * reorderItemsPerPage, pendingPage * reorderItemsPerPage)
+  const paginatedOrdered = orderedReorders.slice((orderedPage - 1) * reorderItemsPerPage, orderedPage * reorderItemsPerPage)
+  const paginatedWasteRisk = (wasteRiskData || []).slice((wasteRiskPage - 1) * wasteRiskItemsPerPage, wasteRiskPage * wasteRiskItemsPerPage)
 
   const generateForecast = useGenerateForecastMutation()
   const updateReorderStatus = useUpdateReorderStatusMutation()
@@ -268,14 +282,14 @@ export function Forecasting() {
             </Card>
 
             {/* Table: Waste Risk Analysis */}
-            <Card>
+            <Card className='!gap-2'>
               <CardHeader className='text-start pb-2'>
                 <CardTitle className='text-base font-bold'>Analisis Risiko Food Loss (Waste Risk)</CardTitle>
                 <CardDescription className='text-xs'>
                   Daftar produk dengan risiko pembusukan tinggi berdasarkan sisa umur simpan dan tren penjualan.
                 </CardDescription>
               </CardHeader>
-               <CardContent className='p-0'>
+              <CardContent className='p-0'>
                 {isWasteLoading || isRefreshing ? (
                   <div className='flex h-40 items-center justify-center'>
                     <Loader2 className='h-8 w-8 animate-spin text-green-600' />
@@ -297,10 +311,16 @@ export function Forecasting() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {wasteRiskData && wasteRiskData.length ? (
-                            wasteRiskData.map((item: any) => (
+                          {paginatedWasteRisk.length ? (
+                            paginatedWasteRisk.map((item: any) => (
                               <TableRow key={item.sku}>
-                                <TableCell className='font-medium text-start'>
+                                <TableCell 
+                                  className='font-semibold text-start text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer'
+                                  onClick={() => {
+                                    setDetailItem(item)
+                                    setDetailOpen(true)
+                                  }}
+                                >
                                   {item.product}
                                 </TableCell>
                                 <TableCell className='text-start'>
@@ -345,6 +365,55 @@ export function Forecasting() {
                         </TableBody>
                       </Table>
                     </div>
+                    {wasteRiskData && wasteRiskData.length > 0 && (
+                      <div className='flex items-center justify-between p-4 border-t bg-muted/5 flex-wrap gap-2'>
+                        <div className='flex items-center gap-2'>
+                          <span className='text-xs text-muted-foreground'>Baris per halaman:</span>
+                          <Select
+                            value={String(wasteRiskItemsPerPage)}
+                            onValueChange={(val) => {
+                              setWasteRiskItemsPerPage(Number(val))
+                              setWasteRiskPage(1)
+                            }}
+                          >
+                            <SelectTrigger className='w-[85px] h-8 cursor-pointer text-xs bg-background border'>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value='5' className='cursor-pointer text-xs'>5</SelectItem>
+                              <SelectItem value='10' className='cursor-pointer text-xs'>10</SelectItem>
+                              <SelectItem value='25' className='cursor-pointer text-xs'>25</SelectItem>
+                              <SelectItem value='50' className='cursor-pointer text-xs'>50</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {totalWasteRiskPages > 1 && (
+                          <div className='flex items-center gap-2'>
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              disabled={wasteRiskPage === 1}
+                              onClick={() => setWasteRiskPage(p => p - 1)}
+                              className='cursor-pointer h-8 text-xs'
+                            >
+                              Sebelumnya
+                            </Button>
+                            <span className='text-xs text-muted-foreground px-2'>
+                              Halaman {wasteRiskPage} dari {totalWasteRiskPages}
+                            </span>
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              disabled={wasteRiskPage === totalWasteRiskPages}
+                              onClick={() => setWasteRiskPage(p => p + 1)}
+                              className='cursor-pointer h-8 text-xs'
+                            >
+                              Selanjutnya
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <div className='border-t px-4 py-3 text-right bg-muted/5'>
                       <span className='text-xs text-muted-foreground'>
                         Total Estimated Loss:{' '}
@@ -361,207 +430,277 @@ export function Forecasting() {
 
           {/* Reorder Recommendations Tab */}
           <TabsContent value='reorder'>
-            <div className='flex gap-2 mb-4 justify-start'>
-              <Button
-                size='sm'
-                variant={reorderSubTab === 'pending' ? 'default' : 'outline'}
-                onClick={() => setReorderSubTab('pending')}
-                className='cursor-pointer text-xs'
-              >
-                Rekomendasi Aktif ({pendingReorders.length})
-              </Button>
-              <Button
-                size='sm'
-                variant={reorderSubTab === 'ordered' ? 'default' : 'outline'}
-                onClick={() => setReorderSubTab('ordered')}
-                className='cursor-pointer text-xs'
-              >
-                Riwayat Pemesanan ({orderedReorders.length})
-              </Button>
-            </div>
+            <Tabs value={reorderSubTab} onValueChange={(val) => setReorderSubTab(val as any)} className='w-full'>
+              <div className='flex justify-end mb-4'>
+                <TabsList className='bg-muted/50 p-1 rounded-lg border'>
+                  <TabsTrigger value='pending' className='text-xs px-3 py-1.5 rounded-md cursor-pointer'>
+                    Rekomendasi Aktif ({pendingReorders.length})
+                  </TabsTrigger>
+                  <TabsTrigger value='ordered' className='text-xs px-3 py-1.5 rounded-md cursor-pointer'>
+                    Riwayat Pemesanan ({orderedReorders.length})
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
-            <Card>
-              <CardContent className='p-0'>
-                {isReorderLoading || isRefreshing ? (
-                  <div className='flex h-40 items-center justify-center'>
+              {isReorderLoading || isRefreshing ? (
+                <Card>
+                  <CardContent className='flex h-40 items-center justify-center p-0'>
                     <Loader2 className='h-8 w-8 animate-spin text-green-600' />
-                  </div>
-                ) : reorderSubTab === 'pending' ? (
-                  <>
-                    <div className='overflow-x-auto w-full'>
-                      <Table className='min-w-[800px]'>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Product</TableHead>
-                            <TableHead>SKU</TableHead>
-                            <TableHead className='text-right'>Current Stock</TableHead>
-                            <TableHead className='text-right'>Recommended</TableHead>
-                            <TableHead className='text-center'>Urgency</TableHead>
-                            <TableHead className='max-w-[320px]'>AI Reasoning</TableHead>
-                            <TableHead className='text-center w-[130px]'>Action</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {paginatedPending.length ? (
-                            paginatedPending.map((rec: any) => (
-                              <TableRow key={rec.id}>
-                                <TableCell className='font-medium text-start'>
-                                  {rec.product.name}
-                                </TableCell>
-                                <TableCell className='text-start'>
-                                  <code className='text-xs'>{rec.product.sku}</code>
-                                </TableCell>
-                                <TableCell className='text-right'>
-                                  {rec.currentStock}
-                                </TableCell>
-                                <TableCell className='text-right font-semibold text-emerald-600'>
-                                  +{rec.recommendedQuantity}
-                                </TableCell>
-                                <TableCell className='text-center'>
-                                  <Badge variant={getUrgencyVariant(rec.urgency)}>
-                                    {rec.urgency}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className='max-w-[320px] whitespace-normal break-words text-xs text-muted-foreground text-start leading-relaxed'>
-                                  {rec.aiReasoning}
-                                </TableCell>
-                                <TableCell className='text-center'>
-                                  <Button
-                                    size='sm'
-                                    variant='outline'
-                                    className='h-8 text-xs cursor-pointer'
-                                    onClick={() => handleOrder(rec.id)}
-                                  >
-                                    Pesan Sekarang
-                                  </Button>
-                                </TableCell>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  <TabsContent value='pending' className='mt-0'>
+                    <Card>
+                      <CardContent className='p-0'>
+                        <div className='overflow-x-auto w-full'>
+                          <Table className='min-w-[800px]'>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Product</TableHead>
+                                <TableHead>SKU</TableHead>
+                                <TableHead className='text-right'>Current Stock</TableHead>
+                                <TableHead className='text-right'>Recommended</TableHead>
+                                <TableHead className='text-center'>Urgency</TableHead>
+                                <TableHead className='max-w-[320px]'>AI Reasoning</TableHead>
+                                <TableHead className='text-center w-[130px]'>Action</TableHead>
                               </TableRow>
-                            ))
-                          ) : (
-                            <TableRow>
-                              <TableCell colSpan={7} className='h-24 text-center text-muted-foreground'>
-                                Tidak ada rekomendasi reorder aktif saat ini.
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
+                            </TableHeader>
+                            <TableBody>
+                              {paginatedPending.length ? (
+                                paginatedPending.map((rec: any) => (
+                                  <TableRow key={rec.id}>
+                                    <TableCell 
+                                      className='font-semibold text-start text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer'
+                                      onClick={() => {
+                                        setDetailItem(rec)
+                                        setDetailOpen(true)
+                                      }}
+                                    >
+                                      {rec.product.name}
+                                    </TableCell>
+                                    <TableCell className='text-start'>
+                                      <code className='text-xs'>{rec.product.sku}</code>
+                                    </TableCell>
+                                    <TableCell className='text-right'>
+                                      {rec.currentStock}
+                                    </TableCell>
+                                    <TableCell className='text-right font-semibold text-emerald-600'>
+                                      +{rec.recommendedQuantity}
+                                    </TableCell>
+                                    <TableCell className='text-center'>
+                                      <Badge variant={getUrgencyVariant(rec.urgency)}>
+                                        {rec.urgency}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell className='max-w-[320px] whitespace-normal break-words text-xs text-muted-foreground text-start leading-relaxed'>
+                                      {rec.aiReasoning}
+                                    </TableCell>
+                                    <TableCell className='text-center'>
+                                      <Button
+                                        size='sm'
+                                        variant='outline'
+                                        className='h-8 text-xs cursor-pointer'
+                                        onClick={() => handleOrder(rec.id)}
+                                      >
+                                        Pesan Sekarang
+                                      </Button>
+                                    </TableCell>
+                                  </TableRow>
+                                ))
+                              ) : (
+                                <TableRow>
+                                  <TableCell colSpan={7} className='h-24 text-center text-muted-foreground'>
+                                    Tidak ada rekomendasi reorder aktif saat ini.
+                                  </TableCell>
+                                </TableRow>
+                              )}
+                            </TableBody>
+                          </Table>
+                        </div>
 
-                    {totalPendingPages > 1 && (
-                      <div className='flex items-center justify-end gap-2 p-4 border-t bg-muted/5'>
-                        <Button
-                          size='sm'
-                          variant='outline'
-                          disabled={pendingPage === 1}
-                          onClick={() => setPendingPage(p => p - 1)}
-                          className='cursor-pointer h-8 text-xs'
-                        >
-                          Sebelumnya
-                        </Button>
-                        <span className='text-xs text-muted-foreground px-2'>
-                          Halaman {pendingPage} dari {totalPendingPages}
-                        </span>
-                        <Button
-                          size='sm'
-                          variant='outline'
-                          disabled={pendingPage === totalPendingPages}
-                          onClick={() => setPendingPage(p => p + 1)}
-                          className='cursor-pointer h-8 text-xs'
-                        >
-                          Selanjutnya
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div className='overflow-x-auto w-full'>
-                      <Table className='min-w-[800px]'>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Product</TableHead>
-                            <TableHead>SKU</TableHead>
-                            <TableHead className='text-right'>Stock Saat Dipesan</TableHead>
-                            <TableHead className='text-right'>Jumlah Dipesan</TableHead>
-                            <TableHead className='text-center'>Urgency</TableHead>
-                            <TableHead className='max-w-[320px]'>AI Reasoning</TableHead>
-                            <TableHead className='text-center w-[130px]'>Status</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {paginatedOrdered.length ? (
-                            paginatedOrdered.map((rec: any) => (
-                              <TableRow key={rec.id}>
-                                <TableCell className='font-medium text-start text-muted-foreground'>
-                                  {rec.product.name}
-                                </TableCell>
-                                <TableCell className='text-start'>
-                                  <code className='text-xs text-muted-foreground'>{rec.product.sku}</code>
-                                </TableCell>
-                                <TableCell className='text-right text-muted-foreground'>
-                                  {rec.currentStock}
-                                </TableCell>
-                                <TableCell className='text-right font-semibold text-emerald-600/80'>
-                                  +{rec.recommendedQuantity}
-                                </TableCell>
-                                <TableCell className='text-center'>
-                                  <Badge variant='outline' className='opacity-70'>
-                                    {rec.urgency}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className='max-w-[320px] whitespace-normal break-words text-xs text-muted-foreground text-start leading-relaxed'>
-                                  {rec.aiReasoning}
-                                </TableCell>
-                                <TableCell className='text-center'>
-                                  <Badge variant='outline' className='bg-green-100 text-green-800 border-green-200 dark:bg-green-950 dark:text-green-200'>
-                                    Dipesan
-                                  </Badge>
-                                </TableCell>
+                        {pendingReorders.length > 0 && (
+                          <div className='flex items-center justify-between p-4 border-t bg-muted/5 flex-wrap gap-2'>
+                            <div className='flex items-center gap-2'>
+                              <span className='text-xs text-muted-foreground'>Baris per halaman:</span>
+                              <Select
+                                value={String(reorderItemsPerPage)}
+                                onValueChange={(val) => {
+                                  setReorderItemsPerPage(Number(val))
+                                  setPendingPage(1)
+                                  setOrderedPage(1)
+                                }}
+                              >
+                                <SelectTrigger className='w-[85px] h-8 cursor-pointer text-xs bg-background border'>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value='5' className='cursor-pointer text-xs'>5</SelectItem>
+                                  <SelectItem value='10' className='cursor-pointer text-xs'>10</SelectItem>
+                                  <SelectItem value='25' className='cursor-pointer text-xs'>25</SelectItem>
+                                  <SelectItem value='50' className='cursor-pointer text-xs'>50</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            {totalPendingPages > 1 && (
+                              <div className='flex items-center gap-2'>
+                                <Button
+                                  size='sm'
+                                  variant='outline'
+                                  disabled={pendingPage === 1}
+                                  onClick={() => setPendingPage(p => p - 1)}
+                                  className='cursor-pointer h-8 text-xs'
+                                >
+                                  Sebelumnya
+                                </Button>
+                                <span className='text-xs text-muted-foreground px-2'>
+                                  Halaman {pendingPage} dari {totalPendingPages}
+                                </span>
+                                <Button
+                                  size='sm'
+                                  variant='outline'
+                                  disabled={pendingPage === totalPendingPages}
+                                  onClick={() => setPendingPage(p => p + 1)}
+                                  className='cursor-pointer h-8 text-xs'
+                                >
+                                  Selanjutnya
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value='ordered' className='mt-0'>
+                    <Card>
+                      <CardContent className='p-0'>
+                        <div className='overflow-x-auto w-full'>
+                          <Table className='min-w-[800px]'>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Product</TableHead>
+                                <TableHead>SKU</TableHead>
+                                <TableHead className='text-right'>Stock Saat Dipesan</TableHead>
+                                <TableHead className='text-right'>Jumlah Dipesan</TableHead>
+                                <TableHead className='text-center'>Urgency</TableHead>
+                                <TableHead className='max-w-[320px]'>AI Reasoning</TableHead>
+                                <TableHead className='text-center w-[130px]'>Status</TableHead>
                               </TableRow>
-                            ))
-                          ) : (
-                            <TableRow>
-                              <TableCell colSpan={7} className='h-24 text-center text-muted-foreground'>
-                                Belum ada riwayat rekomendasi yang dipesan.
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
+                            </TableHeader>
+                            <TableBody>
+                              {paginatedOrdered.length ? (
+                                paginatedOrdered.map((rec: any) => (
+                                  <TableRow key={rec.id}>
+                                    <TableCell 
+                                      className='font-semibold text-start text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer'
+                                      onClick={() => {
+                                        setDetailItem(rec)
+                                        setDetailOpen(true)
+                                      }}
+                                    >
+                                      {rec.product.name}
+                                    </TableCell>
+                                    <TableCell className='text-start'>
+                                      <code className='text-xs text-muted-foreground'>{rec.product.sku}</code>
+                                    </TableCell>
+                                    <TableCell className='text-right text-muted-foreground'>
+                                      {rec.currentStock}
+                                    </TableCell>
+                                    <TableCell className='text-right font-semibold text-emerald-600/80'>
+                                      +{rec.recommendedQuantity}
+                                    </TableCell>
+                                    <TableCell className='text-center'>
+                                      <Badge variant='outline' className='opacity-70'>
+                                        {rec.urgency}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell className='max-w-[320px] whitespace-normal break-words text-xs text-muted-foreground text-start leading-relaxed'>
+                                      {rec.aiReasoning}
+                                    </TableCell>
+                                    <TableCell className='text-center'>
+                                      <Badge variant='outline' className='bg-green-100 text-green-800 border-green-200 dark:bg-green-950 dark:text-green-200'>
+                                        Dipesan
+                                      </Badge>
+                                    </TableCell>
+                                  </TableRow>
+                                ))
+                              ) : (
+                                <TableRow>
+                                  <TableCell colSpan={7} className='h-24 text-center text-muted-foreground'>
+                                    Belum ada riwayat rekomendasi yang dipesan.
+                                  </TableCell>
+                                </TableRow>
+                              )}
+                            </TableBody>
+                          </Table>
+                        </div>
 
-                    {totalOrderedPages > 1 && (
-                      <div className='flex items-center justify-end gap-2 p-4 border-t bg-muted/5'>
-                        <Button
-                          size='sm'
-                          variant='outline'
-                          disabled={orderedPage === 1}
-                          onClick={() => setOrderedPage(p => p - 1)}
-                          className='cursor-pointer h-8 text-xs'
-                        >
-                          Sebelumnya
-                        </Button>
-                        <span className='text-xs text-muted-foreground px-2'>
-                          Halaman {orderedPage} dari {totalOrderedPages}
-                        </span>
-                        <Button
-                          size='sm'
-                          variant='outline'
-                          disabled={orderedPage === totalOrderedPages}
-                          onClick={() => setOrderedPage(p => p + 1)}
-                          className='cursor-pointer h-8 text-xs'
-                        >
-                          Selanjutnya
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                        {orderedReorders.length > 0 && (
+                          <div className='flex items-center justify-between p-4 border-t bg-muted/5 flex-wrap gap-2'>
+                            <div className='flex items-center gap-2'>
+                              <span className='text-xs text-muted-foreground'>Baris per halaman:</span>
+                              <Select
+                                value={String(reorderItemsPerPage)}
+                                onValueChange={(val) => {
+                                  setReorderItemsPerPage(Number(val))
+                                  setPendingPage(1)
+                                  setOrderedPage(1)
+                                }}
+                              >
+                                <SelectTrigger className='w-[85px] h-8 cursor-pointer text-xs bg-background border'>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value='5' className='cursor-pointer text-xs'>5</SelectItem>
+                                  <SelectItem value='10' className='cursor-pointer text-xs'>10</SelectItem>
+                                  <SelectItem value='25' className='cursor-pointer text-xs'>25</SelectItem>
+                                  <SelectItem value='50' className='cursor-pointer text-xs'>50</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            {totalOrderedPages > 1 && (
+                              <div className='flex items-center gap-2'>
+                                <Button
+                                  size='sm'
+                                  variant='outline'
+                                  disabled={orderedPage === 1}
+                                  onClick={() => setOrderedPage(p => p - 1)}
+                                  className='cursor-pointer h-8 text-xs'
+                                >
+                                  Sebelumnya
+                                </Button>
+                                <span className='text-xs text-muted-foreground px-2'>
+                                  Halaman {orderedPage} dari {totalOrderedPages}
+                                </span>
+                                <Button
+                                  size='sm'
+                                  variant='outline'
+                                  disabled={orderedPage === totalOrderedPages}
+                                  onClick={() => setOrderedPage(p => p + 1)}
+                                  className='cursor-pointer h-8 text-xs'
+                                >
+                                  Selanjutnya
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </>
+              )}
+            </Tabs>
           </TabsContent>
         </Tabs>
+        <ProductDetailModal
+          item={detailItem}
+          open={detailOpen}
+          onOpenChange={setDetailOpen}
+          formatRupiah={formatRupiah}
+        />
       </Main>
     </>
   )

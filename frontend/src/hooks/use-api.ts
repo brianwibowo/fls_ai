@@ -360,3 +360,28 @@ export function useCreateSaleMutation() {
   })
 }
 
+// --- Category Hooks ---
+export function useCategoriesQuery() {
+  return useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/categories')
+      return data
+    },
+  })
+}
+
+export function useCreateCategoryMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: { name: string; description?: string }) => {
+      const { data } = await apiClient.post('/categories', payload)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['analytics-category'] })
+    },
+  })
+}

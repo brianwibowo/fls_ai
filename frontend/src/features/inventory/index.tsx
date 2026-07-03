@@ -16,6 +16,8 @@ import {
   useCreateProductMutation,
   useUpdateBatchMutation,
   useDeleteBatchMutation,
+  useCategoriesQuery,
+  useCreateCategoryMutation,
 } from '@/hooks/use-api'
 import { TableSkeleton } from '@/components/page-skeletons'
 
@@ -117,6 +119,7 @@ export function Inventory() {
   const [newBatchData, setNewBatchData] = useState({
     productName: '',
     categoryName: 'Produce',
+    newCategoryName: '',
     batchCode: '',
     quantityReceived: 50,
     receivedDate: new Date().toISOString().split('T')[0],
@@ -125,7 +128,9 @@ export function Inventory() {
 
   const createBatch = useCreateBatchMutation()
   const createProduct = useCreateProductMutation()
+  const createCategory = useCreateCategoryMutation()
   const { data: products } = useProductsQuery()
+  const { data: categories, refetch: refetchCategories, isRefetching: isRefetchingCategories } = useCategoriesQuery()
 
   const handleCreateBatch = async () => {
     if (!newBatchData.productName || !newBatchData.batchCode || !newBatchData.quantityReceived) {
@@ -133,14 +138,36 @@ export function Inventory() {
       return
     }
     try {
-      const categoryMap: Record<string, string> = {}
-      products?.forEach((p: any) => {
-        if (p.category && p.categoryId) {
-          categoryMap[p.category.name] = p.categoryId
-        }
-      })
+      let targetCategoryId = ''
 
-      const targetCategoryId = categoryMap[newBatchData.categoryName]
+      if (newBatchData.categoryName === 'Lainnya') {
+        if (!newBatchData.newCategoryName) {
+          toast.error('Harap masukkan nama kategori baru.')
+          return
+        }
+
+        // Check if category already exists in database
+        const existingCat = categories?.find(
+          (c: any) => c.name.toUpperCase() === newBatchData.newCategoryName!.trim().toUpperCase()
+        )
+
+        if (existingCat) {
+          targetCategoryId = existingCat.id
+        } else {
+          const createdCat = await createCategory.mutateAsync({
+            name: newBatchData.newCategoryName.trim().toUpperCase(), // FORCE UPPERCASE!
+            description: `Kategori ${newBatchData.newCategoryName.trim().toUpperCase()} dibuat secara dinamis`
+          })
+          targetCategoryId = createdCat.id
+        }
+      } else {
+        const categoryMap: Record<string, string> = {}
+        categories?.forEach((c: any) => {
+          categoryMap[c.name] = c.id
+        })
+        targetCategoryId = categoryMap[newBatchData.categoryName]
+      }
+
       if (!targetCategoryId) {
         toast.error('Kategori tidak valid.')
         return
@@ -153,7 +180,8 @@ export function Inventory() {
       let targetProductId = existingProduct?.id
 
       if (!targetProductId) {
-        const prefix = newBatchData.categoryName.substring(0, 3).toUpperCase()
+        const catName = newBatchData.categoryName === 'Lainnya' ? newBatchData.newCategoryName! : newBatchData.categoryName
+        const prefix = catName.substring(0, 3).toUpperCase()
         const randomNum = Math.floor(100 + Math.random() * 900)
         const generatedSku = `${prefix}-${randomNum}`
 
@@ -181,7 +209,8 @@ export function Inventory() {
       setBatchDialogOpen(false)
       setNewBatchData({
         productName: '',
-        categoryName: 'Produce',
+        categoryName: categories?.[0]?.name || 'Produce',
+        newCategoryName: '',
         batchCode: '',
         quantityReceived: 50,
         receivedDate: new Date().toISOString().split('T')[0],
@@ -195,11 +224,12 @@ export function Inventory() {
 
   const { data: summaryData, refetch: refetchSummary, isRefetching: isRefetchingSummary } = useInventorySummaryQuery()
 
-  const isRefreshing = isRefetchingInventory || isRefetchingSummary
+  const isRefreshing = isRefetchingInventory || isRefetchingSummary || isRefetchingCategories
 
   const handleRefresh = () => {
     refetchInventory()
     refetchSummary()
+    refetchCategories()
   }
 
   const suggestions = newBatchData.productName
@@ -297,6 +327,7 @@ export function Inventory() {
           setRiskFilter={setRiskFilter}
           viewMode={viewMode}
           setViewMode={setViewMode}
+          categories={categories}
         />
 
         <div className='mt-4 rounded-xl border bg-card p-4 text-card-foreground shadow-xs'>
@@ -401,6 +432,7 @@ export function Inventory() {
           suggestions={suggestions}
           handleCreateBatch={handleCreateBatch}
           isPending={createBatch.isPending}
+          categories={categories}
         />
       </Main>
     </>

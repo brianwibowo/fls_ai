@@ -10,6 +10,7 @@ type AddBatchDialogProps = {
   newBatchData: {
     productName: string
     categoryName: string
+    newCategoryName: string
     batchCode: string
     quantityReceived: number
     receivedDate: string
@@ -18,6 +19,7 @@ type AddBatchDialogProps = {
   setNewBatchData: React.Dispatch<React.SetStateAction<{
     productName: string
     categoryName: string
+    newCategoryName: string
     batchCode: string
     quantityReceived: number
     receivedDate: string
@@ -29,6 +31,7 @@ type AddBatchDialogProps = {
   suggestions: any[]
   handleCreateBatch: () => void
   isPending: boolean
+  categories: any[] | undefined
 }
 
 export function AddBatchDialog({
@@ -42,6 +45,7 @@ export function AddBatchDialog({
   suggestions,
   handleCreateBatch,
   isPending,
+  categories,
 }: AddBatchDialogProps) {
   const capitalizeWords = (str: string) => {
     return str.replace(/\b\w/g, (char) => char.toUpperCase())
@@ -129,12 +133,30 @@ export function AddBatchDialog({
                 <SelectValue placeholder='Pilih kategori...' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value='Produce' className='cursor-pointer'>Produce (Sayuran & Buah)</SelectItem>
-                <SelectItem value='Dairy' className='cursor-pointer'>Dairy (Susu & Telur)</SelectItem>
-                <SelectItem value='Bakery' className='cursor-pointer'>Bakery (Roti & Kue)</SelectItem>
-                <SelectItem value='Protein' className='cursor-pointer'>Protein (Daging & Ayam)</SelectItem>
+                {categories && categories.map((c: any) => (
+                  <SelectItem key={c.id} value={c.name} className='cursor-pointer'>
+                    {c.name}
+                  </SelectItem>
+                ))}
+                <SelectItem value='Lainnya' className='cursor-pointer font-semibold text-emerald-600 dark:text-emerald-400'>
+                  Lainnya (Buat Baru)
+                </SelectItem>
               </SelectContent>
             </Select>
+
+            {newBatchData.categoryName === 'Lainnya' && (
+              <div className='space-y-1 mt-2.5 animate-in fade-in-50 duration-200'>
+                <label className='text-xs font-semibold text-muted-foreground'>Nama Kategori Baru (Huruf Kapital)</label>
+                <Input
+                  placeholder='Contoh: SNACK'
+                  value={newBatchData.newCategoryName || ''}
+                  onChange={(e) => {
+                    const val = e.target.value.toUpperCase() // FORCE UPPERCASE!
+                    setNewBatchData((p) => ({ ...p, newCategoryName: val }))
+                  }}
+                />
+              </div>
+            )}
           </div>
           <div className='grid grid-cols-2 gap-3'>
             <div className='space-y-1'>

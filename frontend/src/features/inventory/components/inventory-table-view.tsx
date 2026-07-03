@@ -68,7 +68,12 @@ export function InventoryTableView({
         <TableBody>
           {paginatedInventory.map((item) => (
             <TableRow key={`${item.productId}-${item.batchCode}`}>
-              <TableCell className='font-medium'>{item.product}</TableCell>
+              <TableCell 
+                className='font-semibold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer'
+                onClick={() => onViewDetail(item)}
+              >
+                {item.product}
+              </TableCell>
               <TableCell>
                 <code className='text-xs'>{item.sku}</code>
               </TableCell>

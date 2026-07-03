@@ -135,7 +135,11 @@ export class ForecastingService {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
     return this.prisma.reorderRecommendation.findMany({
-      include: { product: true },
+      include: {
+        product: {
+          include: { category: true }
+        }
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -154,6 +158,7 @@ export class ForecastingService {
     const products = await this.prisma.product.findMany({
       where: { isActive: true },
       include: {
+        category: true,
         batches: {
           where: { quantityCurrent: { gt: 0 }, status: 'ACTIVE' },
         },
@@ -196,6 +201,9 @@ export class ForecastingService {
             daysLeft: finalDaysLeft,
             risk: riskLevel,
             estimatedLoss,
+            imageUrl: product.imageUrl,
+            category: product.category?.name || 'Makanan',
+            batchCode: batch.batchCode,
           });
         }
       }

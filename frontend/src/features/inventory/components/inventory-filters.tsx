@@ -20,6 +20,7 @@ type InventoryFiltersProps = {
   setRiskFilter: (val: string) => void
   viewMode: 'list' | 'icons'
   setViewMode: (val: 'list' | 'icons') => void
+  categories: any[] | undefined
 }
 
 export function InventoryFilters({
@@ -33,6 +34,7 @@ export function InventoryFilters({
   setRiskFilter,
   viewMode,
   setViewMode,
+  categories,
 }: InventoryFiltersProps) {
   return (
     <div className='mt-4 flex flex-wrap items-center gap-3'>
@@ -69,10 +71,11 @@ export function InventoryFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value='all' className='cursor-pointer'>Semua Kategori</SelectItem>
-          <SelectItem value='Produce' className='cursor-pointer'>Produce</SelectItem>
-          <SelectItem value='Dairy' className='cursor-pointer'>Dairy</SelectItem>
-          <SelectItem value='Bakery' className='cursor-pointer'>Bakery</SelectItem>
-          <SelectItem value='Protein' className='cursor-pointer'>Protein</SelectItem>
+          {categories && categories.map((c: any) => (
+            <SelectItem key={c.id} value={c.name} className='cursor-pointer'>
+              {c.name}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 
