@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Query, UseGuards, Delete } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { CreateBatchDto } from './dto/create-batch.dto';
 import { UpdateBatchDto } from './dto/update-batch.dto';
@@ -41,5 +41,11 @@ export class InventoryController {
   @Roles(UserRole.ADMIN, UserRole.LOGISTICS_MANAGER)
   update(@Param('id') id: string, @Body() updateBatchDto: UpdateBatchDto) {
     return this.inventoryService.update(id, updateBatchDto);
+  }
+
+  @Delete('batches/:id')
+  @Roles(UserRole.ADMIN, UserRole.LOGISTICS_MANAGER)
+  remove(@Param('id') id: string) {
+    return this.inventoryService.remove(id);
   }
 }

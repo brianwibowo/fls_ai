@@ -36,6 +36,38 @@ export function useCreateBatchMutation() {
   })
 }
 
+export function useUpdateBatchMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, payload }: { id: string; payload: { quantityCurrent?: number; expiryDate?: string } }) => {
+      const { data } = await apiClient.patch(`/inventory/batches/${id}`, payload)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] })
+      queryClient.invalidateQueries({ queryKey: ['inventory-summary'] })
+      queryClient.invalidateQueries({ queryKey: ['forecast-waste-risk'] })
+      queryClient.invalidateQueries({ queryKey: ['forecasting-summary'] })
+    },
+  })
+}
+
+export function useDeleteBatchMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await apiClient.delete(`/inventory/batches/${id}`)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] })
+      queryClient.invalidateQueries({ queryKey: ['inventory-summary'] })
+      queryClient.invalidateQueries({ queryKey: ['forecast-waste-risk'] })
+      queryClient.invalidateQueries({ queryKey: ['forecasting-summary'] })
+    },
+  })
+}
+
 // --- Forecasting Hooks ---
 export function useForecastDemandQuery() {
   return useQuery({

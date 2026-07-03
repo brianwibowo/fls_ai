@@ -14,6 +14,8 @@ import {
   useCreateBatchMutation,
   useProductsQuery,
   useCreateProductMutation,
+  useUpdateBatchMutation,
+  useDeleteBatchMutation,
 } from '@/hooks/use-api'
 import { TableSkeleton } from '@/components/page-skeletons'
 
@@ -25,6 +27,7 @@ import { InventoryIconsView } from './components/inventory-icons-view'
 import { EditImageDialog } from './components/edit-image-dialog'
 import { AddBatchDialog } from './components/add-batch-dialog'
 import { InventoryDetailModal } from './components/inventory-detail-modal'
+import { EditBatchDialog } from './components/edit-batch-dialog'
 
 // Helpers
 function formatRupiah(value: number): string {
@@ -47,8 +50,32 @@ export function Inventory() {
   const [sortByDaysLeftVal, setSortByDaysLeftVal] = useState<boolean>(false)
   const [selectedDetailItem, setSelectedDetailItem] = useState<any | null>(null)
   const [detailModalOpen, setDetailModalOpen] = useState(false)
+  const [editingBatch, setEditingBatch] = useState<any | null>(null)
+  const [editBatchDialogOpen, setEditBatchDialogOpen] = useState(false)
 
   const updateProduct = useUpdateProductMutation()
+  const updateBatch = useUpdateBatchMutation()
+  const deleteBatch = useDeleteBatchMutation()
+
+  const handleUpdateBatch = async (id: string, payload: { quantityCurrent: number; expiryDate: string }) => {
+    try {
+      await updateBatch.mutateAsync({ id, payload })
+      toast.success('Batch berhasil diperbarui!')
+      setEditBatchDialogOpen(false)
+      setEditingBatch(null)
+    } catch {
+      toast.error('Gagal memperbarui batch.')
+    }
+  }
+
+  const handleDeleteBatch = async (id: string) => {
+    try {
+      await deleteBatch.mutateAsync(id)
+      toast.success('Batch berhasil dihapus!')
+    } catch {
+      toast.error('Gagal menghapus batch.')
+    }
+  }
 
   const { data: rawInventory, isLoading } = useInventoryQuery({
     category: categoryFilter,
@@ -195,6 +222,7 @@ export function Inventory() {
       imageUrl: batch.product?.imageUrl || '',
       batchCode: batch.batchCode,
       estimatedLoss,
+      expiryDate: batch.expiryDate,
     }
   })
 
@@ -322,7 +350,20 @@ export function Inventory() {
           open={detailModalOpen}
           onOpenChange={setDetailModalOpen}
           onEditImageClick={setEditingProduct}
+          onEditBatchClick={(item) => {
+            setEditingBatch(item)
+            setEditBatchDialogOpen(true)
+          }}
+          onDeleteBatchClick={handleDeleteBatch}
           formatRupiah={formatRupiah}
+        />
+
+        <EditBatchDialog
+          open={editBatchDialogOpen}
+          onOpenChange={setEditBatchDialogOpen}
+          item={editingBatch}
+          onSave={handleUpdateBatch}
+          isPending={updateBatch.isPending}
         />
 
         <AddBatchDialog

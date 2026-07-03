@@ -1,4 +1,4 @@
-import { IsOptional, IsNumber, IsPositive, IsEnum } from 'class-validator';
+import { IsOptional, IsNumber, IsPositive, IsEnum, IsString } from 'class-validator';
 import { BatchStatus } from '@prisma/client';
 
 export class UpdateBatchDto {
@@ -10,4 +10,8 @@ export class UpdateBatchDto {
   @IsOptional()
   @IsEnum(BatchStatus)
   status?: BatchStatus;
+
+  @IsOptional()
+  @IsString()
+  expiryDate?: string;
 }

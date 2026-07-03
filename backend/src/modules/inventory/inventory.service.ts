@@ -107,9 +107,21 @@ export class InventoryService {
 
   async update(id: string, updateBatchDto: UpdateBatchDto) {
     await this.findOne(id);
+    const data: any = { ...updateBatchDto };
+    if (updateBatchDto.expiryDate) {
+      data.expiryDate = new Date(updateBatchDto.expiryDate);
+    }
     return this.prisma.inventoryBatch.update({
       where: { id },
-      data: updateBatchDto,
+      data,
+    });
+  }
+
+  async remove(id: string) {
+    await this.findOne(id);
+    return this.prisma.inventoryBatch.update({
+      where: { id },
+      data: { status: BatchStatus.DISPOSED },
     });
   }
 

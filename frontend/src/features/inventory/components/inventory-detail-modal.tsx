@@ -2,13 +2,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from '@tanstack/react-router'
-import { Package, BarChart3, AlertTriangle, RefreshCw, Calendar, Tag, ShieldAlert, Sparkles, Edit } from 'lucide-react'
+import { Package, BarChart3, AlertTriangle, RefreshCw, Calendar, Tag, ShieldAlert, Sparkles, Edit, Trash2, Pencil } from 'lucide-react'
 
 type InventoryDetailModalProps = {
   item: any | null
   open: boolean
   onOpenChange: (open: boolean) => void
   onEditImageClick: (product: { id: string; name: string; imageUrl: string }) => void
+  onEditBatchClick: (item: any) => void
+  onDeleteBatchClick: (id: string) => void
   formatRupiah: (val: number) => string
 }
 
@@ -41,6 +43,8 @@ export function InventoryDetailModal({
   open,
   onOpenChange,
   onEditImageClick,
+  onEditBatchClick,
+  onDeleteBatchClick,
   formatRupiah,
 }: InventoryDetailModalProps) {
   const navigate = useNavigate()
@@ -56,6 +60,18 @@ export function InventoryDetailModal({
     })
   }
 
+  const handleEditBatch = () => {
+    onOpenChange(false)
+    onEditBatchClick(item)
+  }
+
+  const handleDeleteBatch = () => {
+    if (confirm(`Apakah Anda yakin ingin menghapus/men-dispose batch ${item.batchCode}?`)) {
+      onOpenChange(false)
+      onDeleteBatchClick(item.id)
+    }
+  }
+
   const handleCreateNudge = () => {
     onOpenChange(false)
     navigate({
@@ -66,7 +82,7 @@ export function InventoryDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-[500px] p-0 overflow-hidden rounded-xl border shadow-lg bg-card'>
+      <DialogContent className='sm:max-w-[500px] p-0 overflow-hidden rounded-xl border shadow-lg bg-card text-card-foreground'>
         {/* Top Product Image banner */}
         <div className='relative h-48 w-full bg-muted/20 flex items-center justify-center border-b overflow-hidden'>
           {item.imageUrl ? (
@@ -77,8 +93,9 @@ export function InventoryDetailModal({
               <span className='text-xs'>Belum ada foto produk</span>
             </div>
           )}
-          <div className='absolute top-3 right-3 flex gap-1.5'>
-            <Badge variant={getRiskBadgeVariant(item.risk)} className='rounded-full px-2.5 py-0.5 font-semibold uppercase text-[10px] tracking-wide'>
+          {/* Risiko badge moved to absolute top-3 left-3 to not overlap close button */}
+          <div className='absolute top-3 left-3 flex gap-1.5 z-10'>
+            <Badge variant={getRiskBadgeVariant(item.risk)} className='rounded-full px-2.5 py-0.5 font-semibold uppercase text-[10px] tracking-wide shadow-xs'>
               Risiko {item.risk}
             </Badge>
           </div>
@@ -155,23 +172,44 @@ export function InventoryDetailModal({
           </div>
         </div>
 
-        <DialogFooter className='p-6 pt-0 flex gap-2 sm:justify-between w-full'>
-          <Button
-            variant='outline'
-            onClick={handleEditImage}
-            className='cursor-pointer text-xs h-9'
-          >
-            <Edit className='mr-2 h-3.5 w-3.5' />
-            Ubah Foto
-          </Button>
+        {/* Footer Actions featuring Edit and Delete buttons */}
+        <DialogFooter className='p-6 pt-0 flex flex-wrap gap-2 justify-between items-center w-full'>
+          <div className='flex gap-1.5'>
+            <Button
+              variant='outline'
+              onClick={handleEditImage}
+              className='cursor-pointer text-xs h-9 px-3'
+              title='Ubah Foto Produk'
+            >
+              <Edit className='h-3.5 w-3.5' />
+            </Button>
+            <Button
+              variant='outline'
+              onClick={handleEditBatch}
+              className='cursor-pointer text-xs h-9 px-3 gap-1.5'
+            >
+              <Pencil className='h-3.5 w-3.5' />
+              Ubah
+            </Button>
+          </div>
 
-          <Button
-            onClick={handleCreateNudge}
-            className='cursor-pointer bg-green-600 hover:bg-green-700 text-white font-semibold text-xs h-9'
-          >
-            <Sparkles className='mr-2 h-3.5 w-3.5' />
-            Buat Nudge Promosi
-          </Button>
+          <div className='flex gap-1.5'>
+            <Button
+              variant='outline'
+              onClick={handleDeleteBatch}
+              className='cursor-pointer border-destructive/30 hover:border-destructive text-destructive hover:bg-destructive/5 text-xs h-9 px-3 gap-1.5'
+            >
+              <Trash2 className='h-3.5 w-3.5' />
+              Hapus
+            </Button>
+            <Button
+              onClick={handleCreateNudge}
+              className='cursor-pointer bg-green-600 hover:bg-green-700 text-white font-semibold text-xs h-9 px-4.5 gap-1.5'
+            >
+              <Sparkles className='h-3.5 w-3.5' />
+              Buat Nudge
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
