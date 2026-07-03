@@ -136,7 +136,7 @@ export function CreateNudgeDialog({
             Batal
           </Button>
           <Button onClick={handleCreateNudge} disabled={isPending} className='cursor-pointer'>
-            Simpan Strategi
+            {isPending ? 'Menyimpan...' : 'Simpan Strategi'}
           </Button>
         </DialogFooter>
       </DialogContent>

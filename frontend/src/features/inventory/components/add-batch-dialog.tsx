@@ -192,7 +192,7 @@ export function AddBatchDialog({
             Batal
           </Button>
           <Button onClick={handleCreateBatch} disabled={isPending} className='cursor-pointer'>
-            Simpan Batch
+            {isPending ? 'Menyimpan...' : 'Simpan Batch'}
           </Button>
         </DialogFooter>
       </DialogContent>

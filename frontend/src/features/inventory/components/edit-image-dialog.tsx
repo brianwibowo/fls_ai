@@ -60,7 +60,7 @@ export function EditImageDialog({
             Batal
           </Button>
           <Button onClick={handleUpdateImage} disabled={isPending} className='cursor-pointer'>
-            Simpan Perubahan
+            {isPending ? 'Menyimpan...' : 'Simpan Perubahan'}
           </Button>
         </DialogFooter>
       </DialogContent>
