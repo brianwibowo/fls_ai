@@ -6,6 +6,7 @@ import {
   RefreshCw,
   ArrowUpRight,
   ArrowDownRight,
+  Activity,
 } from 'lucide-react'
 import {
   Card,
@@ -19,6 +20,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { Button } from '@/components/ui/button'
 import { DashboardSkeleton } from '@/components/page-skeletons'
 import { useAnalyticsOverviewQuery } from '@/hooks/use-api'
 
@@ -145,7 +147,7 @@ function ExecutiveSummaryCard() {
 // --- Main Dashboard ---
 
 export function Dashboard() {
-  const { data: overview, isLoading } = useAnalyticsOverviewQuery()
+  const { data: overview, isLoading, refetch, isRefetching } = useAnalyticsOverviewQuery()
 
   const dashboardMetrics: MetricCardData[] = [
     {
@@ -169,7 +171,7 @@ export function Dashboard() {
     {
       title: 'Inventory Turnover',
       value: `${overview?.inventoryTurnover ?? 4.8}x`,
-      icon: RefreshCw,
+      icon: Activity,
       trend: { direction: 'up', value: '+0.3x', isPositive: true },
     },
   ]
@@ -192,6 +194,16 @@ export function Dashboard() {
               Ringkasan kondisi logistik pangan segar
             </p>
           </div>
+          <Button
+            size='sm'
+            variant='outline'
+            className='cursor-pointer gap-1.5'
+            onClick={() => refetch()}
+            disabled={isRefetching}
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${isRefetching ? 'animate-spin' : ''}`} />
+            Perbarui Data
+          </Button>
         </div>
 
         {isLoading ? (
