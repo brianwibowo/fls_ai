@@ -206,7 +206,7 @@ export function Dashboard() {
           </Button>
         </div>
 
-        {isLoading ? (
+        {isLoading || isRefetching ? (
           <DashboardSkeleton />
         ) : (
           <>
