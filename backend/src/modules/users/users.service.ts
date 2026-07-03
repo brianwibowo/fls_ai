@@ -25,6 +25,7 @@ export class UsersService {
         email: createUserDto.email,
         passwordHash,
         role: createUserDto.role,
+        phoneNumber: createUserDto.phoneNumber,
       },
       select: {
         id: true,
@@ -32,6 +33,7 @@ export class UsersService {
         email: true,
         role: true,
         isActive: true,
+        phoneNumber: true,
         createdAt: true,
       },
     });
@@ -53,6 +55,7 @@ export class UsersService {
         email: true,
         role: true,
         isActive: true,
+        phoneNumber: true,
         createdAt: true,
       },
       orderBy: { createdAt: 'desc' },
@@ -68,6 +71,7 @@ export class UsersService {
         email: true,
         role: true,
         isActive: true,
+        phoneNumber: true,
         createdAt: true,
       },
     });
@@ -88,6 +92,7 @@ export class UsersService {
         email: true,
         role: true,
         isActive: true,
+        phoneNumber: true,
       },
     });
   }

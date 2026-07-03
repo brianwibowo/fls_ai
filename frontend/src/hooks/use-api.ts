@@ -231,7 +231,7 @@ export function useUsersQuery(search?: string) {
 export function useCreateUserMutation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (payload: { name: string; email: string; role: string; password?: string }) => {
+    mutationFn: async (payload: { name: string; email: string; role: string; password?: string; phoneNumber?: string }) => {
       const { data } = await apiClient.post('/users', payload)
       return data
     },
@@ -244,7 +244,7 @@ export function useCreateUserMutation() {
 export function useUpdateUserMutation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, payload }: { id: string; payload: { name?: string; role?: string; isActive?: boolean } }) => {
+    mutationFn: async ({ id, payload }: { id: string; payload: { name?: string; role?: string; isActive?: boolean; phoneNumber?: string } }) => {
       const { data } = await apiClient.patch(`/users/${id}`, payload)
       return data
     },

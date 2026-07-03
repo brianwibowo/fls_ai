@@ -1,10 +1,10 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Package } from 'lucide-react'
+import { Package, Eye } from 'lucide-react'
 
 type InventoryIconsViewProps = {
   paginatedInventory: any[]
-  onEditImageClick: (product: { id: string; name: string; imageUrl: string }) => void
+  onViewDetail: (item: any) => void
   formatRupiah: (val: number) => string
 }
 
@@ -40,13 +40,17 @@ function getDaysLeftColor(daysLeft: number) {
 
 export function InventoryIconsView({
   paginatedInventory,
-  onEditImageClick,
+  onViewDetail,
   formatRupiah,
 }: InventoryIconsViewProps) {
   return (
     <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
       {paginatedInventory.map((item) => (
-        <Card key={`${item.productId}-${item.batchCode}`} className='p-0 overflow-hidden group flex flex-col justify-between'>
+        <Card
+          key={`${item.productId}-${item.batchCode}`}
+          className='p-0 overflow-hidden group flex flex-col justify-between cursor-pointer border hover:border-muted-foreground/30 transition-all duration-200 hover:shadow-md'
+          onClick={() => onViewDetail(item)}
+        >
           <div className='relative h-44 bg-muted/20 flex items-center justify-center overflow-hidden border-b'>
             {item.imageUrl ? (
               <img
@@ -63,18 +67,11 @@ export function InventoryIconsView({
                 {item.category}
               </Badge>
             </div>
-            <button
-              onClick={() =>
-                onEditImageClick({
-                  id: item.productId,
-                  name: item.product,
-                  imageUrl: item.imageUrl || '',
-                })
-              }
-              className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-semibold transition-opacity duration-200 cursor-pointer'
-            >
-              Ubah Gambar
-            </button>
+            {/* Visual Hover Overlay */}
+            <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-semibold gap-1.5 transition-opacity duration-200'>
+              <Eye className='h-4 w-4' />
+              Lihat Detail
+            </div>
           </div>
           <CardContent className='p-4 text-start flex-1 flex flex-col justify-between'>
             <div>

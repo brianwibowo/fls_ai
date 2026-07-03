@@ -172,30 +172,30 @@ export function Forecasting() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue='demand' className='mt-4'>
+        <Tabs defaultValue='overview' className='mt-4'>
           <TabsList>
-            <TabsTrigger value='demand'>Demand Forecast</TabsTrigger>
-            <TabsTrigger value='reorder'>Reorder Recommendations</TabsTrigger>
-            <TabsTrigger value='waste'>Waste Risk Analysis</TabsTrigger>
+            <TabsTrigger value='overview'>Overview Risiko</TabsTrigger>
+            <TabsTrigger value='reorder'>Rekomendasi Reorder</TabsTrigger>
           </TabsList>
 
-          {/* Demand Forecast Tab */}
-          <TabsContent value='demand'>
+          {/* Overview Tab (Demand Forecast + Waste Risk) */}
+          <TabsContent value='overview' className='space-y-4'>
+            {/* Chart: Prediksi vs Aktual Demand */}
             <Card>
-              <CardHeader>
-                <CardTitle>Prediksi vs Aktual Demand</CardTitle>
-                <CardDescription>
+              <CardHeader className='text-start'>
+                <CardTitle className='text-base font-bold'>Prediksi vs Aktual Demand</CardTitle>
+                <CardDescription className='text-xs'>
                   Perbandingan prediksi demand (garis hijau putus-putus) dengan
                   aktual demand (bar hijau) — 7 hari terakhir + 2 hari prediksi
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {isDemandLoading ? (
-                  <div className='flex h-[350px] items-center justify-center'>
+                  <div className='flex h-[300px] items-center justify-center'>
                     <Loader2 className='h-8 w-8 animate-spin text-green-600' />
                   </div>
                 ) : (
-                  <ResponsiveContainer width='100%' height={350}>
+                  <ResponsiveContainer width='100%' height={300}>
                     <ComposedChart data={chartData}>
                       <CartesianGrid strokeDasharray='3 3' className='opacity-30' />
                       <XAxis dataKey='date' className='text-xs' />
@@ -223,6 +223,95 @@ export function Forecasting() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Table: Waste Risk Analysis */}
+            <Card>
+              <CardHeader className='text-start pb-2'>
+                <CardTitle className='text-base font-bold'>Analisis Risiko Food Loss (Waste Risk)</CardTitle>
+                <CardDescription className='text-xs'>
+                  Daftar produk dengan risiko pembusukan tinggi berdasarkan sisa umur simpan dan tren penjualan.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className='p-0'>
+                {isWasteLoading ? (
+                  <div className='flex h-40 items-center justify-center'>
+                    <Loader2 className='h-8 w-8 animate-spin text-green-600' />
+                  </div>
+                ) : (
+                  <>
+                    <div className='overflow-x-auto w-full'>
+                      <Table className='min-w-[800px]'>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Product</TableHead>
+                            <TableHead>SKU</TableHead>
+                            <TableHead className='text-right'>Stock</TableHead>
+                            <TableHead className='text-right'>Demand</TableHead>
+                            <TableHead className='text-center'>Days Left</TableHead>
+                            <TableHead className='text-center'>Risk</TableHead>
+                            <TableHead className='text-right'>Estimated Loss</TableHead>
+                            <TableHead className='text-center w-[120px]'>Action</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {wasteRiskData && wasteRiskData.length ? (
+                            wasteRiskData.map((item: any) => (
+                              <TableRow key={item.sku}>
+                                <TableCell className='font-medium text-start'>
+                                  {item.product}
+                                </TableCell>
+                                <TableCell className='text-start'>
+                                  <code className='text-xs'>{item.sku}</code>
+                                </TableCell>
+                                <TableCell className='text-right'>{item.stock}</TableCell>
+                                <TableCell className='text-right'>{item.demand}</TableCell>
+                                <TableCell className='text-center'>
+                                  <span className={item.daysLeft <= 2 ? 'font-semibold text-red-600' : 'text-orange-600'}>
+                                    {item.daysLeft} hari lagi
+                                  </span>
+                                </TableCell>
+                                <TableCell className='text-center'>
+                                  <Badge variant={getUrgencyVariant(item.risk)}>
+                                    {item.risk}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className='text-right font-medium text-red-600'>
+                                  {formatRupiah(item.estimatedLoss)}
+                                </TableCell>
+                                <TableCell className='text-center'>
+                                  <Button
+                                    size='sm'
+                                    variant='outline'
+                                    className='cursor-pointer h-8 text-xs'
+                                    onClick={() => navigate({ to: '/nudging', search: { createNudgeForProductId: item.id } })}
+                                  >
+                                    Buat Nudge
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          ) : (
+                            <TableRow>
+                              <TableCell colSpan={8} className='h-24 text-center text-muted-foreground'>
+                                Tidak ada produk berisiko food loss tinggi terdeteksi.
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    <div className='border-t px-4 py-3 text-right bg-muted/5'>
+                      <span className='text-xs text-muted-foreground'>
+                        Total Estimated Loss:{' '}
+                      </span>
+                      <span className='text-base font-bold text-red-600'>
+                        {formatRupiah(wasteRiskValue)}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Reorder Recommendations Tab */}
@@ -234,145 +323,65 @@ export function Forecasting() {
                     <Loader2 className='h-8 w-8 animate-spin text-green-600' />
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Product</TableHead>
-                        <TableHead>SKU</TableHead>
-                        <TableHead className='text-right'>Current Stock</TableHead>
-                        <TableHead className='text-right'>Recommended</TableHead>
-                        <TableHead className='text-center'>Urgency</TableHead>
-                        <TableHead className='max-w-[320px]'>AI Reasoning</TableHead>
-                        <TableHead>Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {reorderData && reorderData.length ? (
-                        reorderData.map((rec: any) => (
-                          <TableRow key={rec.id}>
-                            <TableCell className='font-medium'>
-                              {rec.product.name}
-                            </TableCell>
-                            <TableCell>
-                              <code className='text-xs'>{rec.product.sku}</code>
-                            </TableCell>
-                            <TableCell className='text-right'>
-                              {rec.currentStock}
-                            </TableCell>
-                            <TableCell className='text-right font-semibold'>
-                              +{rec.recommendedQuantity}
-                            </TableCell>
-                            <TableCell className='text-center'>
-                              <Badge variant={getUrgencyVariant(rec.urgency)}>
-                                {rec.urgency}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className='max-w-[320px] whitespace-normal break-words text-xs text-muted-foreground leading-relaxed'>
-                              {rec.aiReasoning}
-                            </TableCell>
-                            <TableCell>
-                              <Button
-                                size='sm'
-                                variant='outline'
-                                onClick={() => handleOrder(rec.id)}
-                              >
-                                Pesan Sekarang
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={7} className='h-24 text-center text-muted-foreground'>
-                            Tidak ada rekomendasi reorder pending saat ini.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Waste Risk Analysis Tab */}
-          <TabsContent value='waste'>
-            <Card>
-              <CardContent className='p-0'>
-                {isWasteLoading ? (
-                  <div className='flex h-40 items-center justify-center'>
-                    <Loader2 className='h-8 w-8 animate-spin text-green-600' />
-                  </div>
-                ) : (
-                  <>
-                    <Table>
+                  <div className='overflow-x-auto w-full'>
+                    <Table className='min-w-[800px]'>
                       <TableHeader>
                         <TableRow>
                           <TableHead>Product</TableHead>
                           <TableHead>SKU</TableHead>
-                          <TableHead className='text-right'>Stock</TableHead>
-                          <TableHead className='text-right'>Demand</TableHead>
-                          <TableHead className='text-center'>Days Left</TableHead>
-                          <TableHead className='text-center'>Risk</TableHead>
-                          <TableHead className='text-right'>Estimated Loss</TableHead>
-                          <TableHead>Action</TableHead>
+                          <TableHead className='text-right'>Current Stock</TableHead>
+                          <TableHead className='text-right'>Recommended</TableHead>
+                          <TableHead className='text-center'>Urgency</TableHead>
+                          <TableHead className='max-w-[320px]'>AI Reasoning</TableHead>
+                          <TableHead className='text-center w-[130px]'>Action</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {wasteRiskData && wasteRiskData.length ? (
-                          wasteRiskData.map((item: any) => (
-                            <TableRow key={item.sku}>
-                              <TableCell className='font-medium'>
-                                {item.product}
+                        {reorderData && reorderData.length ? (
+                          reorderData.map((rec: any) => (
+                            <TableRow key={rec.id}>
+                              <TableCell className='font-medium text-start'>
+                                {rec.product.name}
                               </TableCell>
-                              <TableCell>
-                                <code className='text-xs'>{item.sku}</code>
+                              <TableCell className='text-start'>
+                                <code className='text-xs'>{rec.product.sku}</code>
                               </TableCell>
-                              <TableCell className='text-right'>{item.stock}</TableCell>
-                              <TableCell className='text-right'>{item.demand}</TableCell>
+                              <TableCell className='text-right'>
+                                {rec.currentStock}
+                              </TableCell>
+                              <TableCell className='text-right font-semibold text-emerald-600'>
+                                +{rec.recommendedQuantity}
+                              </TableCell>
                               <TableCell className='text-center'>
-                                <span className={item.daysLeft <= 2 ? 'font-semibold text-red-600' : 'text-orange-600'}>
-                                  {item.daysLeft}d
-                                </span>
-                              </TableCell>
-                              <TableCell className='text-center'>
-                                <Badge variant={getUrgencyVariant(item.risk)}>
-                                  {item.risk}
+                                <Badge variant={getUrgencyVariant(rec.urgency)}>
+                                  {rec.urgency}
                                 </Badge>
                               </TableCell>
-                              <TableCell className='text-right font-medium text-red-600'>
-                                {formatRupiah(item.estimatedLoss)}
+                              <TableCell className='max-w-[320px] whitespace-normal break-words text-xs text-muted-foreground text-start leading-relaxed'>
+                                {rec.aiReasoning}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className='text-center'>
                                 <Button
                                   size='sm'
                                   variant='outline'
-                                  className='cursor-pointer'
-                                  onClick={() => navigate({ to: '/nudging', search: { createNudgeForProductId: item.id } })}
+                                  className='h-8 text-xs cursor-pointer'
+                                  onClick={() => handleOrder(rec.id)}
                                 >
-                                  Buat Nudge
+                                  Pesan Sekarang
                                 </Button>
                               </TableCell>
                             </TableRow>
                           ))
                         ) : (
                           <TableRow>
-                            <TableCell colSpan={8} className='h-24 text-center text-muted-foreground'>
-                              Tidak ada produk berisiko food loss tinggi terdeteksi.
+                            <TableCell colSpan={7} className='h-24 text-center text-muted-foreground'>
+                              Tidak ada rekomendasi reorder pending saat ini.
                             </TableCell>
                           </TableRow>
                         )}
                       </TableBody>
                     </Table>
-                    <div className='border-t px-4 py-3 text-right'>
-                      <span className='text-sm text-muted-foreground'>
-                        Total Estimated Loss:{' '}
-                      </span>
-                      <span className='text-lg font-bold text-red-600'>
-                        {formatRupiah(wasteRiskValue)}
-                      </span>
-                    </div>
-                  </>
+                  </div>
                 )}
               </CardContent>
             </Card>

@@ -32,45 +32,47 @@ export function ActivityLogsTable({
 }: ActivityLogsTableProps) {
   return (
     <div className='p-0 border rounded-lg overflow-hidden bg-card'>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Waktu</TableHead>
-            <TableHead>Strategi</TableHead>
-            <TableHead>Produk</TableHead>
-            <TableHead className='text-center'>Event</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedLogs.length ? (
-            paginatedLogs.map((log: any) => {
-              const date = new Date(log.occurredAt).toLocaleString('id-ID', {
-                day: 'numeric',
-                month: 'short',
-                hour: '2-digit',
-                minute: '2-digit',
-              })
-
-              return (
-                <TableRow key={log.id}>
-                  <TableCell className='text-sm text-muted-foreground'>{date}</TableCell>
-                  <TableCell className='font-medium'>{log.nudge?.name ?? '-'}</TableCell>
-                  <TableCell>{log.product?.name ?? '-'}</TableCell>
-                  <TableCell className='text-center'>
-                    <Badge variant={getEventBadgeVariant(log.eventType)}>{log.eventType}</Badge>
-                  </TableCell>
-                </TableRow>
-              )
-            })
-          ) : (
+      <div className='overflow-x-auto w-full'>
+        <Table className='min-w-[700px]'>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={4} className='h-24 text-center text-muted-foreground'>
-                Belum ada rekaman aktivitas nudge log.
-              </TableCell>
+              <TableHead>Waktu</TableHead>
+              <TableHead>Strategi</TableHead>
+              <TableHead>Produk</TableHead>
+              <TableHead className='text-center'>Event</TableHead>
             </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {paginatedLogs.length ? (
+              paginatedLogs.map((log: any) => {
+                const date = new Date(log.occurredAt).toLocaleString('id-ID', {
+                  day: 'numeric',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })
+
+                return (
+                  <TableRow key={log.id}>
+                    <TableCell className='text-sm text-muted-foreground text-start'>{date}</TableCell>
+                    <TableCell className='font-medium text-start'>{log.nudge?.name ?? '-'}</TableCell>
+                    <TableCell className='text-start'>{log.product?.name ?? '-'}</TableCell>
+                    <TableCell className='text-center'>
+                      <Badge variant={getEventBadgeVariant(log.eventType)}>{log.eventType}</Badge>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} className='h-24 text-center text-muted-foreground'>
+                  Belum ada rekaman aktivitas nudge log.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Pagination Controls */}
       {totalLogsPages > 1 && (

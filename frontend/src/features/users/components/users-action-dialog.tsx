@@ -123,6 +123,7 @@ export function UsersActionDialog({
           payload: {
             name,
             role: roleUpper,
+            phoneNumber: values.phoneNumber,
           },
         })
         toast.success('Pengguna berhasil diperbarui!')
@@ -132,6 +133,7 @@ export function UsersActionDialog({
           email: values.email,
           role: roleUpper,
           password: values.password,
+          phoneNumber: values.phoneNumber,
         })
         toast.success('Pengguna berhasil ditambahkan!')
       }
@@ -218,6 +220,7 @@ export function UsersActionDialog({
                     </FormLabel>
                     <FormControl>
                       <Input
+                        disabled={isEdit}
                         placeholder='budi_setiawan'
                         className='col-span-4'
                         {...field}
@@ -237,6 +240,23 @@ export function UsersActionDialog({
                       <Input
                         disabled={isEdit}
                         placeholder='budi@freashday.com'
+                        className='col-span-4'
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className='col-span-4 col-start-3' />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='phoneNumber'
+                render={({ field }) => (
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='col-span-2 text-end'>No. Telepon</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder='081234567890'
                         className='col-span-4'
                         {...field}
                       />

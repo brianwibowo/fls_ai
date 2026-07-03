@@ -45,7 +45,7 @@ export function Users() {
       lastName,
       username,
       email: user.email,
-      phoneNumber: '-',
+      phoneNumber: user.phoneNumber || '-',
       status: user.isActive ? 'active' : 'inactive',
       role: user.role.toLowerCase(),
       createdAt: new Date(user.createdAt),

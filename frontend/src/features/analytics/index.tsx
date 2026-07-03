@@ -164,12 +164,62 @@ export function Analytics() {
           )}
         </div>
 
+        {/* AI Insights — Rekomendasi Rantai Pasok Berbasis AI */}
+        <div className='mt-6 p-6 rounded-xl border bg-emerald-500/5 text-start border-emerald-500/10'>
+          <div className='flex items-start gap-3.5 mb-5 pb-4 border-b border-emerald-500/10'>
+            <Sparkles className='h-6 w-6 text-emerald-600 shrink-0 mt-0.5' />
+            <div>
+              <h3 className='font-bold text-emerald-950 dark:text-emerald-50 text-base'>Rekomendasi Rantai Pasok Berbasis AI</h3>
+              <p className='text-xs text-muted-foreground mt-1 leading-relaxed'>
+                Rekomendasi cerdas berikut dihasilkan menggunakan model AI prediktif untuk menekan food loss dan mengoptimalkan efisiensi rantai pasok Anda secara otomatis.
+              </p>
+            </div>
+          </div>
+
+          <div className='grid gap-4 sm:grid-cols-2'>
+            {isInsightsLoading ? (
+              <div className='flex h-40 items-center justify-center col-span-2'>
+                <Loader2 className='h-8 w-8 animate-spin text-green-600' />
+              </div>
+            ) : (
+              insightsData && insightsData.map((insight: any) => {
+                const type = insight.type
+                const bgColor = type === 'warning' ? 'bg-amber-500/5 dark:bg-amber-950/10 border-amber-500/10' : type === 'success' ? 'bg-emerald-500/5 dark:bg-emerald-950/10 border-emerald-500/10' : 'bg-blue-500/5 dark:bg-blue-950/10 border-blue-500/10'
+
+                return (
+                  <Card
+                    key={insight.id}
+                    className={cn('transition-all duration-200 border shadow-2xs hover:shadow-xs bg-card', bgColor)}
+                  >
+                    <CardContent className='flex items-start gap-3.5 p-5'>
+                      <div className='p-2 rounded-lg bg-background border shadow-3xs shrink-0'>
+                        {getInsightIcon(insight.type)}
+                      </div>
+                      <div className='flex-1 text-start flex flex-col justify-between h-full min-h-[70px]'>
+                        <div>
+                          <p className='text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1'>
+                            Kategori: {insight.category}
+                          </p>
+                          <p className='text-xs font-medium leading-relaxed text-foreground'>{insight.text}</p>
+                        </div>
+                        <div className='mt-3 flex items-center justify-between text-[10px] text-muted-foreground border-t border-border/40 pt-2'>
+                          <span>Rekomendasi Sistem</span>
+                          <span className='font-semibold text-emerald-600 dark:text-emerald-400'>Aktif</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })
+            )}
+          </div>
+        </div>
+
         {/* Tabs */}
-        <Tabs defaultValue='trends' className='mt-4'>
+        <Tabs defaultValue='trends' className='mt-6'>
           <TabsList>
             <TabsTrigger value='trends'>Trend Analysis</TabsTrigger>
             <TabsTrigger value='category'>Category Performance</TabsTrigger>
-            <TabsTrigger value='insights'>AI Insights</TabsTrigger>
           </TabsList>
 
           {/* Trend Analysis Tab */}
@@ -181,9 +231,9 @@ export function Analytics() {
             ) : (
               <div className='grid gap-4 lg:grid-cols-2'>
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Waste Reduction Trend</CardTitle>
-                    <CardDescription>
+                  <CardHeader className='text-start'>
+                    <CardTitle className='text-base font-bold'>Waste Reduction Trend</CardTitle>
+                    <CardDescription className='text-xs'>
                       Tren persentase pengurangan food waste (mingguan)
                     </CardDescription>
                   </CardHeader>
@@ -209,9 +259,9 @@ export function Analytics() {
                 </Card>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Inventory Turnover Trend</CardTitle>
-                    <CardDescription>
+                  <CardHeader className='text-start'>
+                    <CardTitle className='text-base font-bold'>Inventory Turnover Trend</CardTitle>
+                    <CardDescription className='text-xs'>
                       Tren perputaran stok (mingguan)
                     </CardDescription>
                   </CardHeader>
@@ -248,9 +298,9 @@ export function Analytics() {
             ) : (
               <>
                 <Card className='mb-4'>
-                  <CardHeader>
-                    <CardTitle>Performa per Kategori</CardTitle>
-                    <CardDescription>
+                  <CardHeader className='text-start'>
+                    <CardTitle className='text-base font-bold'>Performa per Kategori</CardTitle>
+                    <CardDescription className='text-xs'>
                       Breakdown food loss, efektivitas nudging, dan sell-through rate
                     </CardDescription>
                   </CardHeader>
@@ -272,99 +322,50 @@ export function Analytics() {
 
                 <Card>
                   <CardContent className='p-0'>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Kategori</TableHead>
-                          <TableHead className='text-center'>Total Produk</TableHead>
-                          <TableHead className='text-center'>Disposed</TableHead>
-                          <TableHead className='text-center'>Food Loss %</TableHead>
-                          <TableHead className='text-center'>Nudge Effect. %</TableHead>
-                          <TableHead className='text-center'>Sell-Through %</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {categoryData && categoryData.map((cat: any) => (
-                          <TableRow key={cat.category}>
-                            <TableCell className='font-medium'>
-                              <Badge variant='outline'>{cat.category}</Badge>
-                            </TableCell>
-                            <TableCell className='text-center'>
-                              {cat.totalProducts}
-                            </TableCell>
-                            <TableCell className='text-center text-red-600'>
-                              {cat.disposed}
-                            </TableCell>
-                            <TableCell className='text-center'>
-                              <span className={cat.foodLoss > 15 ? 'font-semibold text-red-600' : 'text-orange-600'}>
-                                {cat.foodLoss}%
-                              </span>
-                            </TableCell>
-                            <TableCell className='text-center text-green-600'>
-                              {cat.nudgeEffectiveness}%
-                            </TableCell>
-                            <TableCell className='text-center'>
-                              {cat.sellThrough}%
-                            </TableCell>
+                    <div className='overflow-x-auto w-full'>
+                      <Table className='min-w-[700px]'>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Kategori</TableHead>
+                            <TableHead className='text-center'>Total Produk</TableHead>
+                            <TableHead className='text-center'>Disposed</TableHead>
+                            <TableHead className='text-center'>Food Loss %</TableHead>
+                            <TableHead className='text-center'>Nudge Effect. %</TableHead>
+                            <TableHead className='text-center'>Sell-Through %</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {categoryData && categoryData.map((cat: any) => (
+                            <TableRow key={cat.category}>
+                              <TableCell className='font-medium text-start'>
+                                <Badge variant='outline'>{cat.category}</Badge>
+                              </TableCell>
+                              <TableCell className='text-center'>
+                                {cat.totalProducts}
+                              </TableCell>
+                              <TableCell className='text-center text-red-600'>
+                                {cat.disposed}
+                              </TableCell>
+                              <TableCell className='text-center'>
+                                <span className={cat.foodLoss > 15 ? 'font-semibold text-red-600' : 'text-orange-600'}>
+                                  {cat.foodLoss}%
+                                </span>
+                              </TableCell>
+                              <TableCell className='text-center text-green-600'>
+                                {cat.nudgeEffectiveness}%
+                              </TableCell>
+                              <TableCell className='text-center'>
+                                {cat.sellThrough}%
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </>
             )}
-          </TabsContent>
-
-          {/* AI Insights Tab */}
-          <TabsContent value='insights'>
-            <div className='mb-6 p-4 rounded-xl border bg-emerald-500/5 text-start border-emerald-500/10 flex items-start gap-3'>
-              <Sparkles className='h-5 w-5 text-emerald-600 shrink-0 mt-0.5' />
-              <div>
-                <h3 className='font-semibold text-emerald-950 dark:text-emerald-50 text-sm'>Rekomendasi Rantai Pasok Berbasis AI</h3>
-                <p className='text-xs text-muted-foreground mt-0.5 leading-relaxed'>
-                  Insight berikut dihasilkan secara dinamis menggunakan model prediktif untuk memitigasi food waste dan mengoptimalkan persediaan Anda.
-                </p>
-              </div>
-            </div>
-            
-            <div className='grid gap-4 sm:grid-cols-2'>
-              {isInsightsLoading ? (
-                <div className='flex h-40 items-center justify-center col-span-2'>
-                  <Loader2 className='h-8 w-8 animate-spin text-green-600' />
-                </div>
-              ) : (
-                insightsData && insightsData.map((insight: any) => {
-                  const type = insight.type
-                  const bgColor = type === 'warning' ? 'bg-amber-50/50 dark:bg-amber-950/10 border-amber-200/60 dark:border-amber-900/30' : type === 'success' ? 'bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-200/60 dark:border-emerald-900/30' : 'bg-blue-50/50 dark:bg-blue-950/10 border-blue-200/60 dark:border-blue-900/30'
-                  
-                  return (
-                    <Card
-                      key={insight.id}
-                      className={cn('transition-all duration-200 border shadow-xs hover:shadow-md', bgColor)}
-                    >
-                      <CardContent className='flex items-start gap-3.5 p-5'>
-                        <div className='p-2 rounded-lg bg-background border shadow-2xs shrink-0'>
-                          {getInsightIcon(insight.type)}
-                        </div>
-                        <div className='flex-1 text-start flex flex-col justify-between h-full min-h-[70px]'>
-                          <div>
-                            <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1'>
-                              Kategori: {insight.category}
-                            </p>
-                            <p className='text-sm font-medium leading-relaxed text-foreground'>{insight.text}</p>
-                          </div>
-                          <div className='mt-3 flex items-center justify-between text-xs text-muted-foreground border-t border-border/50 pt-2'>
-                            <span>Rekomendasi Sistem</span>
-                            <span className='font-semibold text-emerald-600 dark:text-emerald-400'>Aktif</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )
-                })
-              )}
-            </div>
           </TabsContent>
         </Tabs>
       </Main>

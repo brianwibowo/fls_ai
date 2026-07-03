@@ -4,10 +4,6 @@ import {
   Target,
   ShoppingCart,
   RefreshCw,
-  AlertTriangle,
-  Recycle,
-  BellRing,
-  Smile,
   ArrowUpRight,
   ArrowDownRight,
 } from 'lucide-react'
@@ -144,22 +140,7 @@ function ExecutiveSummaryCard() {
   )
 }
 
-function FoodSavedWidget({ value }: { value: number }) {
-  return (
-    <Card className='border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950'>
-      <CardContent className='flex flex-col items-center justify-center py-6'>
-        <Leaf className='mb-2 h-8 w-8 text-green-600' />
-        <p className='text-sm font-medium text-muted-foreground'>
-          Food Saved This Month
-        </p>
-        <p className='text-3xl font-bold text-green-600'>{value}</p>
-        <p className='text-xs text-muted-foreground'>
-          item berhasil diselamatkan
-        </p>
-      </CardContent>
-    </Card>
-  )
-}
+
 
 // --- Main Dashboard ---
 
@@ -190,33 +171,6 @@ export function Dashboard() {
       value: `${overview?.inventoryTurnover ?? 4.8}x`,
       icon: RefreshCw,
       trend: { direction: 'up', value: '+0.3x', isPositive: true },
-    },
-  ]
-
-  const secondaryMetrics: MetricCardData[] = [
-    {
-      title: 'Active Nudges',
-      value: String(overview?.activeNudges ?? 5),
-      icon: BellRing,
-      trend: { direction: 'up', value: '+2', isPositive: true },
-    },
-    {
-      title: 'Risk Items',
-      value: String(overview?.riskItems ?? 12),
-      icon: AlertTriangle,
-      trend: { direction: 'down', value: '-3', isPositive: true },
-    },
-    {
-      title: 'Items Recovered',
-      value: String(overview?.itemsRecovered ?? 156),
-      icon: Recycle,
-      trend: { direction: 'up', value: '+24', isPositive: true },
-    },
-    {
-      title: 'Nudge Conversion',
-      value: `${overview?.nudgeConversion ?? 18.7}%`,
-      icon: Smile,
-      trend: { direction: 'up', value: '+2.1%', isPositive: true },
     },
   ]
 
@@ -255,14 +209,6 @@ export function Dashboard() {
               {dashboardMetrics.map((metric) => (
                 <MetricCard key={metric.title} data={metric} />
               ))}
-            </div>
-
-            {/* Secondary Metrics + Food Saved Widget */}
-            <div className='mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5'>
-              {secondaryMetrics.slice(0, 4).map((metric) => (
-                <MetricCard key={metric.title} data={metric} />
-              ))}
-              <FoodSavedWidget value={overview?.foodSavedThisMonth ?? 156} />
             </div>
           </>
         )}

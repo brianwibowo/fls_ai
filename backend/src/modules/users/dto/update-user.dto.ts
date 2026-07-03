@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsEnum, IsBoolean, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsEnum, IsBoolean, IsOptional, IsString } from 'class-validator';
 import { UserRole } from '@prisma/client';
 
 export class UpdateUserDto {
@@ -13,4 +13,8 @@ export class UpdateUserDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsString({ message: 'No. Telepon harus berupa teks.' })
+  phoneNumber?: string;
 }

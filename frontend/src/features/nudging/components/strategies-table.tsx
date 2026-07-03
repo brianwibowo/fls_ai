@@ -41,60 +41,62 @@ export function StrategiesTable({
 }: StrategiesTableProps) {
   return (
     <div className='p-0 border rounded-lg overflow-hidden bg-card'>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nama Strategi</TableHead>
-            <TableHead>Tipe</TableHead>
-            <TableHead className='text-center'>Produk</TableHead>
-            <TableHead>Periode</TableHead>
-            <TableHead className='text-center'>Conversion</TableHead>
-            <TableHead className='text-center'>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedStrategies.length ? (
-            paginatedStrategies.map((strategy: any) => {
-              const start = new Date(strategy.startDate).toLocaleDateString('id-ID', {
-                day: 'numeric',
-                month: 'short',
-              })
-              const end = new Date(strategy.endDate).toLocaleDateString('id-ID', {
-                day: 'numeric',
-                month: 'short',
-              })
-              const isActive = strategy.status === 'ACTIVE'
-
-              return (
-                <TableRow key={strategy.id}>
-                  <TableCell className='font-medium'>{strategy.name}</TableCell>
-                  <TableCell>
-                    <Badge variant='outline'>{getNudgeTypeLabel(strategy.type)}</Badge>
-                  </TableCell>
-                  <TableCell className='text-center'>{strategy.products?.length ?? 0}</TableCell>
-                  <TableCell className='text-sm text-muted-foreground'>
-                    {start} - {end}
-                  </TableCell>
-                  <TableCell className='text-center font-medium text-green-600'>18.7%</TableCell>
-                  <TableCell className='text-center'>
-                    <Switch
-                      checked={isActive}
-                      onCheckedChange={() => handleToggleStatus(strategy.id, isActive)}
-                      disabled={isPending}
-                    />
-                  </TableCell>
-                </TableRow>
-              )
-            })
-          ) : (
+      <div className='overflow-x-auto w-full'>
+        <Table className='min-w-[800px]'>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={6} className='h-24 text-center text-muted-foreground'>
-                Belum ada strategi nudge dikonfigurasi.
-              </TableCell>
+              <TableHead>Nama Strategi</TableHead>
+              <TableHead>Tipe</TableHead>
+              <TableHead className='text-center'>Produk</TableHead>
+              <TableHead>Periode</TableHead>
+              <TableHead className='text-center'>Conversion</TableHead>
+              <TableHead className='text-center'>Status</TableHead>
             </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {paginatedStrategies.length ? (
+              paginatedStrategies.map((strategy: any) => {
+                const start = new Date(strategy.startDate).toLocaleDateString('id-ID', {
+                  day: 'numeric',
+                  month: 'short',
+                })
+                const end = new Date(strategy.endDate).toLocaleDateString('id-ID', {
+                  day: 'numeric',
+                  month: 'short',
+                })
+                const isActive = strategy.status === 'ACTIVE'
+
+                return (
+                  <TableRow key={strategy.id}>
+                    <TableCell className='font-medium text-start'>{strategy.name}</TableCell>
+                    <TableCell className='text-start'>
+                      <Badge variant='outline'>{getNudgeTypeLabel(strategy.type)}</Badge>
+                    </TableCell>
+                    <TableCell className='text-center'>{strategy.products?.length ?? 0}</TableCell>
+                    <TableCell className='text-sm text-muted-foreground text-start'>
+                      {start} - {end}
+                    </TableCell>
+                    <TableCell className='text-center font-medium text-green-600'>18.7%</TableCell>
+                    <TableCell className='text-center'>
+                      <Switch
+                        checked={isActive}
+                        onCheckedChange={() => handleToggleStatus(strategy.id, isActive)}
+                        disabled={isPending}
+                      />
+                    </TableCell>
+                  </TableRow>
+                )
+              })
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className='h-24 text-center text-muted-foreground'>
+                  Belum ada strategi nudge dikonfigurasi.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Pagination Controls */}
       {totalStrategiesPages > 1 && (

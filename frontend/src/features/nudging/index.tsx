@@ -125,7 +125,7 @@ export function Nudging() {
     try {
       await updateNudge.mutateAsync({
         id,
-        status: currentActive ? 'INACTIVE' : 'ACTIVE',
+        status: currentActive ? 'ENDED' : 'ACTIVE',
       })
       toast.success(`Strategi berhasil ${currentActive ? 'dinonaktifkan' : 'diaktifkan'}!`)
     } catch {
@@ -181,7 +181,6 @@ export function Nudging() {
         <Tabs defaultValue='strategies' className='mt-4'>
           <TabsList>
             <TabsTrigger value='strategies'>Nudge Strategies</TabsTrigger>
-            <TabsTrigger value='preview'>Product Preview</TabsTrigger>
             <TabsTrigger value='logs'>Activity Logs</TabsTrigger>
           </TabsList>
 
@@ -205,22 +204,6 @@ export function Nudging() {
             )}
           </TabsContent>
 
-          {/* Product Preview Tab */}
-          <TabsContent value='preview'>
-            {isPreviewLoading ? (
-              <div className='flex h-40 items-center justify-center'>
-                <span className='text-sm text-muted-foreground'>Memuat data...</span>
-              </div>
-            ) : (
-              <ProductPreviewGrid
-                previewData={previewData}
-                handleSimulateSale={handleSimulateSale}
-                isPending={createSale.isPending}
-                formatRupiah={formatRupiah}
-              />
-            )}
-          </TabsContent>
-
           {/* Activity Logs Tab */}
           <TabsContent value='logs'>
             {isLogsLoading ? (
@@ -239,6 +222,31 @@ export function Nudging() {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Section Bawah: Simulasi & Preview Produk Retail */}
+        <div className='mt-8 pt-8 border-t text-start'>
+          <div className='mb-4'>
+            <h2 className='text-lg font-bold tracking-tight text-foreground flex items-center gap-2'>
+              <span>🛒 Preview Produk di Aplikasi Retail</span>
+            </h2>
+            <p className='text-xs text-muted-foreground mt-0.5'>
+              Simulasi tampilan real-time promo FEFO (First-Expired, First-Out) yang langsung dilihat oleh pelanggan di toko online.
+            </p>
+          </div>
+
+          {isPreviewLoading ? (
+            <div className='flex h-40 items-center justify-center border rounded-lg bg-muted/5'>
+              <span className='text-sm text-muted-foreground'>Memuat pratinjau...</span>
+            </div>
+          ) : (
+            <ProductPreviewGrid
+              previewData={previewData}
+              handleSimulateSale={handleSimulateSale}
+              isPending={createSale.isPending}
+              formatRupiah={formatRupiah}
+            />
+          )}
+        </div>
 
         {/* Dialogs */}
         <CreateNudgeDialog

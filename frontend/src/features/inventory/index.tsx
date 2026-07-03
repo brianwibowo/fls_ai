@@ -24,6 +24,7 @@ import { InventoryTableView } from './components/inventory-table-view'
 import { InventoryIconsView } from './components/inventory-icons-view'
 import { EditImageDialog } from './components/edit-image-dialog'
 import { AddBatchDialog } from './components/add-batch-dialog'
+import { InventoryDetailModal } from './components/inventory-detail-modal'
 
 // Helpers
 function formatRupiah(value: number): string {
@@ -44,6 +45,8 @@ export function Inventory() {
   const [editingProduct, setEditingProduct] = useState<{ id: string; name: string; imageUrl: string } | null>(null)
   const [newImageUrl, setNewImageUrl] = useState('')
   const [sortByDaysLeftVal, setSortByDaysLeftVal] = useState<boolean>(false)
+  const [selectedDetailItem, setSelectedDetailItem] = useState<any | null>(null)
+  const [detailModalOpen, setDetailModalOpen] = useState(false)
 
   const updateProduct = useUpdateProductMutation()
 
@@ -251,14 +254,20 @@ export function Inventory() {
             viewMode === 'list' ? (
               <InventoryTableView
                 paginatedInventory={paginatedInventory}
-                onEditImageClick={setEditingProduct}
+                onViewDetail={(item) => {
+                  setSelectedDetailItem(item)
+                  setDetailModalOpen(true)
+                }}
                 formatRupiah={formatRupiah}
                 sortByDaysLeft={() => setSortByDaysLeftVal(!sortByDaysLeftVal)}
               />
             ) : (
               <InventoryIconsView
                 paginatedInventory={paginatedInventory}
-                onEditImageClick={setEditingProduct}
+                onViewDetail={(item) => {
+                  setSelectedDetailItem(item)
+                  setDetailModalOpen(true)
+                }}
                 formatRupiah={formatRupiah}
               />
             )
@@ -306,6 +315,14 @@ export function Inventory() {
           setNewImageUrl={setNewImageUrl}
           handleUpdateImage={handleUpdateImage}
           isPending={updateProduct.isPending}
+        />
+
+        <InventoryDetailModal
+          item={selectedDetailItem}
+          open={detailModalOpen}
+          onOpenChange={setDetailModalOpen}
+          onEditImageClick={setEditingProduct}
+          formatRupiah={formatRupiah}
         />
 
         <AddBatchDialog

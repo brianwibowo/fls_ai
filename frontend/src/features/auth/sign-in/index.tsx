@@ -1,4 +1,4 @@
-import { Link, useSearch } from '@tanstack/react-router'
+import { useSearch } from '@tanstack/react-router'
 import { Leaf } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { UserAuthForm } from './components/user-auth-form'
@@ -61,26 +61,6 @@ export function SignIn() {
 
           <UserAuthForm redirectTo={redirect} />
 
-          <div className='flex flex-col gap-2.5 pt-4 border-t border-border/40 text-xs text-muted-foreground'>
-            <div className='flex justify-between items-center'>
-              <span>Lupa password?</span>
-              <Link
-                to='/forgot-password'
-                className='font-semibold text-primary underline underline-offset-4 hover:text-primary/80'
-              >
-                Atur Ulang
-              </Link>
-            </div>
-            <div className='flex justify-between items-center'>
-              <span>Belum punya akun?</span>
-              <Link
-                to='/sign-up'
-                className='font-semibold text-primary underline underline-offset-4 hover:text-primary/80'
-              >
-                Daftar Baru
-              </Link>
-            </div>
-          </div>
         </div>
       </div>
     </div>

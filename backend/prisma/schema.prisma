@@ -70,6 +70,7 @@ model User {
   passwordHash String
   role         UserRole
   isActive     Boolean         @default(true)
+  phoneNumber  String?
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
   nudges       NudgeStrategy[]
