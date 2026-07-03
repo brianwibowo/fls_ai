@@ -46,7 +46,7 @@ export function InventoryIconsView({
   return (
     <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
       {paginatedInventory.map((item) => (
-        <Card key={`${item.productId}-${item.batchCode}`} className='overflow-hidden group flex flex-col justify-between'>
+        <Card key={`${item.productId}-${item.batchCode}`} className='p-0 overflow-hidden group flex flex-col justify-between'>
           <div className='relative h-44 bg-muted/20 flex items-center justify-center overflow-hidden border-b'>
             {item.imageUrl ? (
               <img

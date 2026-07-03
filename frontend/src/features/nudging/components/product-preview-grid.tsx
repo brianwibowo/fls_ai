@@ -20,7 +20,7 @@ export function ProductPreviewGrid({
     <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
       {previewData && previewData.length ? (
         previewData.map((product: any) => (
-          <Card key={product.productId} className='overflow-hidden flex flex-col justify-between text-start'>
+          <Card key={product.productId} className='p-0 overflow-hidden flex flex-col justify-between text-start'>
             <div>
               <div className='flex h-40 items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-b'>
                 <ShoppingBag className='h-12 w-12 text-green-300 dark:text-green-700' />
