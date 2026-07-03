@@ -135,9 +135,8 @@ export class ForecastingService {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
     return this.prisma.reorderRecommendation.findMany({
-      where: { status: ReorderStatus.PENDING },
       include: { product: true },
-      orderBy: { urgency: 'desc' },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -247,7 +246,7 @@ export class ForecastingService {
     return {
       forecastAccuracy,
       demandVariance,
-      reorderAlerts: reorders.length,
+      reorderAlerts: reorders.filter(r => r.status === 'PENDING').length,
       wasteRisk: totalWasteRiskVal,
     };
   }
