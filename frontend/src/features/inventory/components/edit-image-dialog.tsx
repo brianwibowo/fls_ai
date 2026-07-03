@@ -29,6 +29,12 @@ export function EditImageDialog({
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Batasi file maksimal 20MB agar tidak membuat browser freeze/crash
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('File terlalu besar! Maksimal ukuran file adalah 20MB.')
+      return
+    }
+
     setIsProcessing(true)
     try {
       toast.info('Sedang mengonversi dan mengompresi gambar ke WebP...')
