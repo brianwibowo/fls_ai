@@ -1,50 +1,8 @@
 import { useState, useEffect } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
-import {
-  Eye,
-  TrendingUp,
-  BellRing,
-  ShoppingBag,
-  Plus,
-  ArrowUpRight,
-  Loader2,
-} from 'lucide-react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
@@ -62,42 +20,20 @@ import {
 } from '@/hooks/use-api'
 import { toast } from 'sonner'
 
-// --- Helpers ---
+// Sub-components
+import { NudgingSummaryCards } from './components/nudging-summary-cards'
+import { StrategiesTable } from './components/strategies-table'
+import { ProductPreviewGrid } from './components/product-preview-grid'
+import { ActivityLogsTable } from './components/activity-logs-table'
+import { CreateNudgeDialog } from './components/create-nudge-dialog'
 
+// Helpers
 function formatRupiah(value: number): string {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0,
   }).format(value)
-}
-
-function getNudgeTypeLabel(type: string) {
-  switch (type.toLowerCase()) {
-    case 'discount':
-      return 'Diskon'
-    case 'bundling':
-      return 'Bundling'
-    case 'urgency_label':
-      return 'Label Urgensi'
-    case 'gamification_badge':
-      return 'Badge Gamifikasi'
-    default:
-      return type
-  }
-}
-
-function getEventBadgeVariant(eventType: string) {
-  switch (eventType) {
-    case 'CONVERSION':
-    case 'Conversion':
-      return 'default' as const
-    case 'CLICK':
-    case 'Click':
-      return 'secondary' as const
-    default:
-      return 'outline' as const
-  }
 }
 
 const route = getRouteApi('/_authenticated/nudging')
@@ -145,10 +81,6 @@ export function Nudging() {
     productId: '',
   })
 
-  const capitalizeWords = (str: string) => {
-    return str.replace(/\b\w/g, (char) => char.toUpperCase())
-  }
-
   // Auto-open and prefill if navigated with query param
   useEffect(() => {
     if (search.createNudgeForProductId) {
@@ -159,21 +91,22 @@ export function Nudging() {
 
   const handleCreateNudge = async () => {
     if (!newNudgeData.name || !newNudgeData.productId) {
-      toast.error('Harap isi semua kolom.')
+      toast.error('Harap lengkapi nama strategi dan produk sasaran.')
       return
     }
+
     try {
       await createNudge.mutateAsync({
         name: newNudgeData.name,
         type: newNudgeData.type,
-        discountPercentage: newNudgeData.type === 'DISCOUNT' ? Number(newNudgeData.discountPercentage) : undefined,
+        discountPercentage: newNudgeData.type === 'DISCOUNT' ? Number(newNudgeData.discountPercentage) : 0,
         startDate: new Date(newNudgeData.startDate).toISOString(),
         endDate: new Date(newNudgeData.endDate).toISOString(),
         productIds: [newNudgeData.productId],
       })
-      toast.success('Strategi nudge baru berhasil dibuat!')
+
+      toast.success('Strategi nudging baru berhasil ditambahkan!')
       setNudgeDialogOpen(false)
-      // Reset form
       setNewNudgeData({
         name: '',
         type: 'DISCOUNT',
@@ -183,14 +116,27 @@ export function Nudging() {
         productId: '',
       })
     } catch (err: any) {
-      const message = err.response?.data?.message || 'Gagal menyimpan strategi nudge baru.'
+      const message = err.response?.data?.message || 'Gagal menyimpan strategi nudging.'
       toast.error(message)
     }
   }
 
+  const handleToggleStatus = async (id: string, currentActive: boolean) => {
+    try {
+      await updateNudge.mutateAsync({
+        id,
+        status: currentActive ? 'INACTIVE' : 'ACTIVE',
+      })
+      toast.success(`Strategi berhasil ${currentActive ? 'dinonaktifkan' : 'diaktifkan'}!`)
+    } catch {
+      toast.error('Gagal memperbarui status strategi.')
+    }
+  }
+
+  // Pagination states
   const [strategiesPage, setStrategiesPage] = useState(1)
   const [logsPage, setLogsPage] = useState(1)
-  const itemsPerPage = 5
+  const itemsPerPage = 10
 
   const totalStrategies = strategiesData?.length ?? 0
   const totalStrategiesPages = Math.ceil(totalStrategies / itemsPerPage)
@@ -206,25 +152,6 @@ export function Nudging() {
     logsPage * itemsPerPage
   )
 
-  const summaryCards = [
-    { title: 'Total Impressions', value: summaryData?.totalImpressions ?? '12,450', icon: Eye, trend: '+1,200' },
-    { title: 'Avg Conversion', value: `${summaryData?.avgConversion ?? 18.7}%`, icon: TrendingUp, trend: '+2.1%' },
-    { title: 'Active Nudges', value: summaryData?.activeNudges ?? '5/5', icon: BellRing, trend: '+2' },
-    { title: 'Products Nudged', value: summaryData?.productsNudged ?? '8', icon: ShoppingBag, trend: '+3' },
-  ]
-
-  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
-    try {
-      await updateNudge.mutateAsync({
-        id,
-        status: currentStatus ? 'ENDED' : 'ACTIVE',
-      })
-      toast.success('Status strategi nudge berhasil diubah!')
-    } catch {
-      toast.error('Gagal mengubah status strategi nudge.')
-    }
-  }
-
   return (
     <>
       <Header>
@@ -236,42 +163,19 @@ export function Nudging() {
       <Main>
         <div className='mb-2 flex items-center justify-between'>
           <div>
-            <h1 className='text-2xl font-bold tracking-tight'>
-              Digital Nudging
-            </h1>
+            <h1 className='text-2xl font-bold tracking-tight'>Digital Nudging</h1>
             <p className='text-sm text-muted-foreground'>
-              Strategi promosi produk near-expiry untuk mendorong pembelian secara etis
+              Rancang promosi pintar dan label urgensi berbasis sisa umur simpan produk
             </p>
           </div>
-          <Button onClick={() => setNudgeDialogOpen(true)} className='cursor-pointer'>
+          <Button onClick={() => setNudgeDialogOpen(true)} className='cursor-pointer bg-green-600 hover:bg-green-700 text-white'>
             <Plus className='mr-2 h-4 w-4' />
-            Buat Strategi Baru
+            Buat Strategi
           </Button>
         </div>
 
         {/* Summary Cards */}
-        <div className='mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-          {summaryCards.map((card) => {
-            const Icon = card.icon
-            return (
-              <Card key={card.title}>
-                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    {card.title}
-                  </CardTitle>
-                  <Icon className='h-4 w-4 text-muted-foreground' />
-                </CardHeader>
-                <CardContent>
-                  <div className='text-2xl font-bold'>{card.value}</div>
-                  <p className='flex items-center text-xs text-green-600'>
-                    <ArrowUpRight className='mr-1 h-3 w-3' />
-                    {card.trend} vs minggu lalu
-                  </p>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
+        <NudgingSummaryCards summaryData={summaryData} />
 
         {/* Tabs */}
         <Tabs defaultValue='strategies' className='mt-4'>
@@ -283,101 +187,21 @@ export function Nudging() {
 
           {/* Strategies Tab */}
           <TabsContent value='strategies'>
-            <Card>
-              <CardContent className='p-0'>
-                {isStrategiesLoading ? (
-                  <div className='flex h-40 items-center justify-center'>
-                    <Loader2 className='h-8 w-8 animate-spin text-green-600' />
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nama Strategi</TableHead>
-                        <TableHead>Tipe</TableHead>
-                        <TableHead className='text-center'>Produk</TableHead>
-                        <TableHead>Periode</TableHead>
-                        <TableHead className='text-center'>Conversion</TableHead>
-                        <TableHead className='text-center'>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedStrategies.length ? (
-                        paginatedStrategies.map((strategy: any) => {
-                          const start = new Date(strategy.startDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
-                          const end = new Date(strategy.endDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
-                          const isActive = strategy.status === 'ACTIVE'
-
-                          return (
-                            <TableRow key={strategy.id}>
-                              <TableCell className='font-medium'>
-                                {strategy.name}
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant='outline'>
-                                  {getNudgeTypeLabel(strategy.type)}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className='text-center'>
-                                {strategy.products?.length ?? 0}
-                              </TableCell>
-                              <TableCell className='text-sm text-muted-foreground'>
-                                {start} - {end}
-                              </TableCell>
-                              <TableCell className='text-center font-medium text-green-600'>
-                                18.7%
-                              </TableCell>
-                              <TableCell className='text-center'>
-                                <Switch
-                                  checked={isActive}
-                                  onCheckedChange={() => handleToggleStatus(strategy.id, isActive)}
-                                  disabled={updateNudge.isPending}
-                                />
-                              </TableCell>
-                            </TableRow>
-                          )
-                        })
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={6} className='h-24 text-center text-muted-foreground'>
-                            Belum ada strategi nudge dikonfigurasi.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Pagination Controls */}
-            {totalStrategiesPages > 1 && (
-              <div className='mt-4 flex items-center justify-between px-2'>
-                <div className='text-xs text-muted-foreground'>
-                  Menampilkan {((strategiesPage - 1) * itemsPerPage) + 1} - {Math.min(strategiesPage * itemsPerPage, totalStrategies)} dari {totalStrategies} strategi
-                </div>
-                <div className='flex items-center space-x-2'>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => setStrategiesPage((prev) => Math.max(prev - 1, 1))}
-                    disabled={strategiesPage === 1}
-                  >
-                    Sebelumnya
-                  </Button>
-                  <span className='text-xs text-muted-foreground min-w-8 text-center'>
-                    {strategiesPage} / {totalStrategiesPages}
-                  </span>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => setStrategiesPage((prev) => Math.min(prev + 1, totalStrategiesPages))}
-                    disabled={strategiesPage === totalStrategiesPages}
-                  >
-                    Selanjutnya
-                  </Button>
-                </div>
+            {isStrategiesLoading ? (
+              <div className='flex h-40 items-center justify-center'>
+                <span className='text-sm text-muted-foreground'>Memuat data...</span>
               </div>
+            ) : (
+              <StrategiesTable
+                paginatedStrategies={paginatedStrategies}
+                handleToggleStatus={handleToggleStatus}
+                isPending={updateNudge.isPending}
+                strategiesPage={strategiesPage}
+                totalStrategiesPages={totalStrategiesPages}
+                setStrategiesPage={setStrategiesPage}
+                totalStrategies={totalStrategies}
+                itemsPerPage={itemsPerPage}
+              />
             )}
           </TabsContent>
 
@@ -385,243 +209,47 @@ export function Nudging() {
           <TabsContent value='preview'>
             {isPreviewLoading ? (
               <div className='flex h-40 items-center justify-center'>
-                <Loader2 className='h-8 w-8 animate-spin text-green-600' />
+                <span className='text-sm text-muted-foreground'>Memuat data...</span>
               </div>
             ) : (
-              <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
-                {previewData && previewData.length ? (
-                  previewData.map((product: any) => (
-                    <Card key={product.productId} className='overflow-hidden'>
-                      <div className='flex h-40 items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950'>
-                        <ShoppingBag className='h-12 w-12 text-green-300' />
-                      </div>
-                      <CardHeader className='pb-2'>
-                        <CardTitle className='text-base'>{product.productName}</CardTitle>
-                        <CardDescription className='flex items-center gap-2'>
-                          {product.originalPrice !== product.discountedPrice && (
-                            <span className='text-sm text-muted-foreground line-through'>
-                              {formatRupiah(product.originalPrice)}
-                            </span>
-                          )}
-                          <span className='text-lg font-bold text-green-600'>
-                            {formatRupiah(product.discountedPrice)}
-                          </span>
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className='flex flex-wrap gap-1.5'>
-                          {product.labels.map((label: string) => (
-                            <Badge
-                              key={label}
-                              variant={
-                                label.includes('Save') ? 'default' : 
-                                label.includes('left') ? 'destructive' : 'secondary'
-                              }
-                              className='text-xs'
-                            >
-                              {label}
-                            </Badge>
-                          ))}
-                        </div>
-                      </CardContent>
-                      <CardFooter className='p-4 pt-0'>
-                        <Button
-                          size='sm'
-                          className='w-full cursor-pointer bg-green-600 hover:bg-green-700 text-white font-semibold'
-                          disabled={createSale.isPending}
-                          onClick={() => handleSimulateSale(product)}
-                        >
-                          {createSale.isPending ? 'Memproses...' : 'Simulasikan Pembelian'}
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  ))
-                ) : (
-                  <div className='col-span-full h-24 text-center text-muted-foreground flex items-center justify-center'>
-                    Tidak ada preview produk near-expiry aktif.
-                  </div>
-                )}
-              </div>
+              <ProductPreviewGrid
+                previewData={previewData}
+                handleSimulateSale={handleSimulateSale}
+                isPending={createSale.isPending}
+                formatRupiah={formatRupiah}
+              />
             )}
           </TabsContent>
 
           {/* Activity Logs Tab */}
           <TabsContent value='logs'>
-            <Card>
-              <CardContent className='p-0'>
-                {isLogsLoading ? (
-                  <div className='flex h-40 items-center justify-center'>
-                    <Loader2 className='h-8 w-8 animate-spin text-green-600' />
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Waktu</TableHead>
-                        <TableHead>Strategi</TableHead>
-                        <TableHead>Produk</TableHead>
-                        <TableHead className='text-center'>Event</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedLogs.length ? (
-                        paginatedLogs.map((log: any) => {
-                          const date = new Date(log.occurredAt).toLocaleString('id-ID', {
-                            day: 'numeric',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })
-
-                          return (
-                            <TableRow key={log.id}>
-                              <TableCell className='text-sm text-muted-foreground'>
-                                {date}
-                              </TableCell>
-                              <TableCell className='font-medium'>
-                                {log.nudge?.name ?? '-'}
-                              </TableCell>
-                              <TableCell>{log.product?.name ?? '-'}</TableCell>
-                              <TableCell className='text-center'>
-                                <Badge variant={getEventBadgeVariant(log.eventType)}>
-                                  {log.eventType}
-                                </Badge>
-                              </TableCell>
-                            </TableRow>
-                          )
-                        })
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className='h-24 text-center text-muted-foreground'>
-                            Belum ada log aktivitas event.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Pagination Controls */}
-            {totalLogsPages > 1 && (
-              <div className='mt-4 flex items-center justify-between px-2'>
-                <div className='text-xs text-muted-foreground'>
-                  Menampilkan {((logsPage - 1) * itemsPerPage) + 1} - {Math.min(logsPage * itemsPerPage, totalLogs)} dari {totalLogs} log
-                </div>
-                <div className='flex items-center space-x-2'>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => setLogsPage((prev) => Math.max(prev - 1, 1))}
-                    disabled={logsPage === 1}
-                  >
-                    Sebelumnya
-                  </Button>
-                  <span className='text-xs text-muted-foreground min-w-8 text-center'>
-                    {logsPage} / {totalLogsPages}
-                  </span>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => setLogsPage((prev) => Math.min(prev + 1, totalLogsPages))}
-                    disabled={logsPage === totalLogsPages}
-                  >
-                    Selanjutnya
-                  </Button>
-                </div>
+            {isLogsLoading ? (
+              <div className='flex h-40 items-center justify-center'>
+                <span className='text-sm text-muted-foreground'>Memuat data...</span>
               </div>
+            ) : (
+              <ActivityLogsTable
+                paginatedLogs={paginatedLogs}
+                logsPage={logsPage}
+                totalLogsPages={totalLogsPages}
+                setLogsPage={setLogsPage}
+                totalLogs={totalLogs}
+                itemsPerPage={itemsPerPage}
+              />
             )}
           </TabsContent>
         </Tabs>
-        {/* Dialog Buat Nudge Baru */}
-        <Dialog open={nudgeDialogOpen} onOpenChange={setNudgeDialogOpen}>
-          <DialogContent className='sm:max-w-md'>
-            <DialogHeader>
-              <DialogTitle>Buat Strategi Nudge Baru</DialogTitle>
-              <DialogDescription>
-                Rancang kampanye promosi otomatis untuk produk pangan segar pilihan.
-              </DialogDescription>
-            </DialogHeader>
-            <div className='flex flex-col space-y-4 py-4 text-start'>
-              <div className='space-y-1'>
-                <label className='text-xs font-semibold text-muted-foreground'>Nama Strategi</label>
-                <Input
-                  placeholder='Contoh: Flash Sale Bayam Hijau'
-                  value={newNudgeData.name}
-                  onChange={(e) => setNewNudgeData(p => ({ ...p, name: capitalizeWords(e.target.value) }))}
-                />
-              </div>
-              <div className='grid grid-cols-2 gap-3'>
-                <div className='space-y-1'>
-                  <label className='text-xs font-semibold text-muted-foreground'>Tipe Nudge</label>
-                  <Select value={newNudgeData.type} onValueChange={(val) => setNewNudgeData(p => ({ ...p, type: val }))}>
-                    <SelectTrigger className='cursor-pointer'>
-                      <SelectValue placeholder='Pilih tipe...' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='DISCOUNT' className='cursor-pointer'>Diskon</SelectItem>
-                      <SelectItem value='BUNDLING' className='cursor-pointer'>Bundling</SelectItem>
-                      <SelectItem value='URGENCY_LABEL' className='cursor-pointer'>Label Urgensi</SelectItem>
-                      <SelectItem value='GAMIFICATION_BADGE' className='cursor-pointer'>Badge Gamifikasi</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className='space-y-1'>
-                  <label className='text-xs font-semibold text-muted-foreground'>Persentase Diskon (%)</label>
-                  <Input
-                    type='number'
-                    placeholder='10'
-                    disabled={newNudgeData.type !== 'DISCOUNT'}
-                    value={newNudgeData.discountPercentage}
-                    onChange={(e) => setNewNudgeData(p => ({ ...p, discountPercentage: Number(e.target.value) }))}
-                  />
-                </div>
-              </div>
-              <div className='space-y-1'>
-                <label className='text-xs font-semibold text-muted-foreground'>Pilih Produk</label>
-                <Select value={newNudgeData.productId} onValueChange={(val) => setNewNudgeData(p => ({ ...p, productId: val }))}>
-                  <SelectTrigger className='cursor-pointer'>
-                    <SelectValue placeholder='Pilih produk...' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {products?.map((p: any) => (
-                      <SelectItem key={p.id} value={p.id} className='cursor-pointer'>
-                        {p.name} ({p.sku})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className='grid grid-cols-2 gap-3'>
-                <div className='space-y-1'>
-                  <label className='text-xs font-semibold text-muted-foreground'>Tanggal Mulai</label>
-                  <Input
-                    type='date'
-                    value={newNudgeData.startDate}
-                    onChange={(e) => setNewNudgeData(p => ({ ...p, startDate: e.target.value }))}
-                  />
-                </div>
-                <div className='space-y-1'>
-                  <label className='text-xs font-semibold text-muted-foreground'>Tanggal Selesai</label>
-                  <Input
-                    type='date'
-                    value={newNudgeData.endDate}
-                    onChange={(e) => setNewNudgeData(p => ({ ...p, endDate: e.target.value }))}
-                  />
-                </div>
-              </div>
-            </div>
-            <DialogFooter className='sm:justify-end gap-2'>
-              <Button variant='outline' onClick={() => setNudgeDialogOpen(false)}>
-                Batal
-              </Button>
-              <Button onClick={handleCreateNudge} disabled={createNudge.isPending} className='cursor-pointer'>
-                Simpan Nudge
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+
+        {/* Dialogs */}
+        <CreateNudgeDialog
+          nudgeDialogOpen={nudgeDialogOpen}
+          setNudgeDialogOpen={setNudgeDialogOpen}
+          newNudgeData={newNudgeData}
+          setNewNudgeData={setNewNudgeData}
+          products={products}
+          handleCreateNudge={handleCreateNudge}
+          isPending={createNudge.isPending}
+        />
       </Main>
     </>
   )
