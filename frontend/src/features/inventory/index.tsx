@@ -169,7 +169,33 @@ export function Inventory() {
       ) || []
     : []
 
-  const processedInventory = [...(rawInventory || [])]
+  const mappedInventory = (rawInventory || []).map((batch: any) => {
+    const quantity = batch.quantityCurrent
+    let status: 'Optimal' | 'Low' | 'Overstock' = 'Optimal'
+    if (quantity > 150) status = 'Overstock'
+    else if (quantity < 50) status = 'Low'
+
+    const risk = batch.riskLevel === 'HIGH' ? 'High' : batch.riskLevel === 'MEDIUM' ? 'Medium' : 'Low'
+    const estimatedLoss = quantity * (batch.product?.unitCost || 10000)
+
+    return {
+      id: batch.id,
+      productId: batch.productId,
+      product: batch.product?.name || '',
+      sku: batch.product?.sku || '',
+      category: batch.product?.category?.name || '',
+      stock: quantity,
+      demand: Math.floor(quantity * 0.8),
+      status,
+      daysLeft: batch.daysLeft,
+      risk,
+      imageUrl: batch.product?.imageUrl || '',
+      batchCode: batch.batchCode,
+      estimatedLoss,
+    }
+  })
+
+  const processedInventory = [...mappedInventory]
   if (sortByDaysLeftVal) {
     processedInventory.sort((a, b) => a.daysLeft - b.daysLeft)
   }
