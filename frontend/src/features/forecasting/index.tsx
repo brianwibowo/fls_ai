@@ -7,6 +7,7 @@ import {
   ArrowUpRight,
   Loader2,
 } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
 import {
   Card,
   CardContent,
@@ -78,6 +79,8 @@ function getUrgencyVariant(urgency: string) {
 
 export function Forecasting() {
   const navigate = useNavigate()
+  const user = useAuthStore((state) => state.auth.user)
+  const userRole = user?.role?.[0] // 'admin', 'logistics_manager', 'marketing_manager'
   const { data: forecastDemandData, isLoading: isDemandLoading } = useForecastDemandQuery()
   const { data: reorderData, isLoading: isReorderLoading } = useReorderQuery()
   const { data: wasteRiskData, isLoading: isWasteLoading } = useWasteRiskQuery()
@@ -250,7 +253,7 @@ export function Forecasting() {
                             <TableHead className='text-center'>Days Left</TableHead>
                             <TableHead className='text-center'>Risk</TableHead>
                             <TableHead className='text-right'>Estimated Loss</TableHead>
-                            <TableHead className='text-center w-[120px]'>Action</TableHead>
+                            {userRole === 'admin' && <TableHead className='text-center w-[120px]'>Action</TableHead>}
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -278,16 +281,18 @@ export function Forecasting() {
                                 <TableCell className='text-right font-medium text-red-600'>
                                   {formatRupiah(item.estimatedLoss)}
                                 </TableCell>
-                                <TableCell className='text-center'>
-                                  <Button
-                                    size='sm'
-                                    variant='outline'
-                                    className='cursor-pointer h-8 text-xs'
-                                    onClick={() => navigate({ to: '/nudging', search: { createNudgeForProductId: item.id } })}
-                                  >
-                                    Buat Nudge
-                                  </Button>
-                                </TableCell>
+                                {userRole === 'admin' && (
+                                  <TableCell className='text-center'>
+                                    <Button
+                                      size='sm'
+                                      variant='outline'
+                                      className='cursor-pointer h-8 text-xs'
+                                      onClick={() => navigate({ to: '/nudging', search: { createNudgeForProductId: item.id } })}
+                                    >
+                                      Buat Nudge
+                                    </Button>
+                                  </TableCell>
+                                )}
                               </TableRow>
                             ))
                           ) : (
