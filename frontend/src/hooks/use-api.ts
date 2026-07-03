@@ -306,3 +306,25 @@ export function useCreateProductMutation() {
   })
 }
 
+export function useCreateSaleMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: { productId: string; quantitySold: number; saleDate: string; salePrice: number; wasNudged?: boolean; nudgeId?: string }) => {
+      const { data } = await apiClient.post('/sales', payload)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] })
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['nudge-previews'] })
+      queryClient.invalidateQueries({ queryKey: ['nudge-logs'] })
+      queryClient.invalidateQueries({ queryKey: ['nudging-summary'] })
+      queryClient.invalidateQueries({ queryKey: ['analytics-overview'] })
+      queryClient.invalidateQueries({ queryKey: ['analytics-trends'] })
+      queryClient.invalidateQueries({ queryKey: ['analytics-category'] })
+      queryClient.invalidateQueries({ queryKey: ['analytics-insights'] })
+      queryClient.invalidateQueries({ queryKey: ['inventory-summary'] })
+    },
+  })
+}
+

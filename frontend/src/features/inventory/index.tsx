@@ -132,6 +132,7 @@ export function Inventory() {
   }
 
   const [batchDialogOpen, setBatchDialogOpen] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const [newBatchData, setNewBatchData] = useState({
     productName: '',
     categoryName: 'Produce',
@@ -145,9 +146,22 @@ export function Inventory() {
   const createProduct = useCreateProductMutation()
   const { data: products } = useProductsQuery()
 
+  const fillExpiryDate = (receivedStr: string, shelfLife: number) => {
+    const d = new Date(receivedStr)
+    d.setDate(d.getDate() + shelfLife)
+    return d.toISOString().split('T')[0]
+  }
+
   const capitalizeWords = (str: string) => {
     return str.replace(/\b\w/g, (char) => char.toUpperCase())
   }
+
+  const suggestions = newBatchData.productName
+    ? products?.filter((p: any) =>
+        p.name.toLowerCase().includes(newBatchData.productName.toLowerCase()) &&
+        p.name.toLowerCase() !== newBatchData.productName.toLowerCase()
+      ) || []
+    : []
 
   const handleCreateBatch = async () => {
     if (!newBatchData.productName || !newBatchData.batchCode || !newBatchData.quantityReceived) {
@@ -614,19 +628,65 @@ export function Inventory() {
                 Masukkan rincian batch baru untuk produk pangan segar di inventaris.
               </DialogDescription>
             </DialogHeader>
-            <div className='flex flex-col space-y-4 py-4 text-start'>
-              <div className='space-y-1'>
+             <div className='flex flex-col space-y-4 py-4 text-start'>
+              <div className='space-y-1 relative'>
                 <label className='text-xs font-semibold text-muted-foreground'>Nama Produk</label>
-                <Input
-                  placeholder='Contoh: Tomat Cherry Segar'
-                  value={newBatchData.productName}
-                  onChange={(e) => {
-                    setNewBatchData(p => ({
-                      ...p,
-                      productName: capitalizeWords(e.target.value)
-                    }))
-                  }}
-                />
+                <div className='flex gap-1 items-center'>
+                  <Input
+                    placeholder='Contoh: Tomat Cherry Segar'
+                    value={newBatchData.productName}
+                    onChange={(e) => {
+                      const val = capitalizeWords(e.target.value)
+                      setNewBatchData(p => {
+                        const matching = products?.find((prod: any) => prod.name.toLowerCase() === val.toLowerCase())
+                        const newExpiry = matching
+                          ? fillExpiryDate(p.receivedDate, matching.shelfLifeDays)
+                          : p.expiryDate
+                        return {
+                          ...p,
+                          productName: val,
+                          categoryName: matching?.category?.name || p.categoryName,
+                          expiryDate: newExpiry
+                        }
+                      })
+                      setShowSuggestions(true)
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  />
+                  {newBatchData.productName && !products?.some((p: any) => p.name.toLowerCase() === newBatchData.productName.toLowerCase()) && (
+                    <Badge variant='outline' className='bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 shrink-0 border-emerald-500/20'>
+                      Baru
+                    </Badge>
+                  )}
+                </div>
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className='absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md'>
+                    {suggestions.map((p: any) => (
+                      <div
+                        key={p.id}
+                        className='relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden hover:bg-accent hover:text-accent-foreground text-start'
+                        onClick={() => {
+                          setNewBatchData(prev => ({
+                            ...prev,
+                            productName: p.name,
+                            categoryName: p.category?.name || prev.categoryName,
+                            expiryDate: fillExpiryDate(prev.receivedDate, p.shelfLifeDays)
+                          }))
+                          setShowSuggestions(false)
+                        }}
+                      >
+                        <div className='flex-1'>
+                          <span className='font-medium text-xs sm:text-sm'>{p.name}</span>
+                          <span className='text-[10px] text-muted-foreground ml-2'>({p.category?.name || 'Kategori'})</span>
+                        </div>
+                        <span className='text-[9px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground'>
+                          {p.sku}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className='space-y-1'>
                 <label className='text-xs font-semibold text-muted-foreground'>Kategori</label>
@@ -667,7 +727,20 @@ export function Inventory() {
                   <Input
                     type='date'
                     value={newBatchData.receivedDate}
-                    onChange={(e) => setNewBatchData(p => ({ ...p, receivedDate: e.target.value }))}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setNewBatchData(p => {
+                        const matching = products?.find((prod: any) => prod.name.toLowerCase() === p.productName.toLowerCase())
+                        const newExpiry = matching
+                          ? fillExpiryDate(val, matching.shelfLifeDays)
+                          : p.expiryDate
+                        return {
+                          ...p,
+                          receivedDate: val,
+                          expiryDate: newExpiry
+                        }
+                      })
+                    }}
                   />
                 </div>
                 <div className='space-y-1'>

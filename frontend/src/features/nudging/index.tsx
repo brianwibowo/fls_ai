@@ -15,6 +15,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -57,6 +58,7 @@ import {
   useUpdateNudgeMutation,
   useCreateNudgeMutation,
   useProductsQuery,
+  useCreateSaleMutation,
 } from '@/hooks/use-api'
 import { toast } from 'sonner'
 
@@ -109,7 +111,29 @@ export function Nudging() {
 
   const updateNudge = useUpdateNudgeMutation()
   const createNudge = useCreateNudgeMutation()
+  const createSale = useCreateSaleMutation()
   const { data: products } = useProductsQuery()
+
+  const handleSimulateSale = async (productPreview: any) => {
+    const quantity = Math.floor(Math.random() * 4) + 2
+    const hasNudge = productPreview.originalPrice !== productPreview.discountedPrice
+    try {
+      await createSale.mutateAsync({
+        productId: productPreview.productId,
+        quantitySold: quantity,
+        saleDate: new Date().toISOString(),
+        salePrice: productPreview.discountedPrice,
+        wasNudged: hasNudge,
+        nudgeId: productPreview.nudgeId || undefined
+      })
+      toast.success(
+        `Simulasi Pembelian Berhasil: Terjual ${quantity} unit ${productPreview.productName} (FEFO Terpotong & Log Tercatat)!`
+      )
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Gagal menjalankan simulasi transaksi.'
+      toast.error(message)
+    }
+  }
 
   const [nudgeDialogOpen, setNudgeDialogOpen] = useState(false)
   const [newNudgeData, setNewNudgeData] = useState({
@@ -400,6 +424,16 @@ export function Nudging() {
                           ))}
                         </div>
                       </CardContent>
+                      <CardFooter className='p-4 pt-0'>
+                        <Button
+                          size='sm'
+                          className='w-full cursor-pointer bg-green-600 hover:bg-green-700 text-white font-semibold'
+                          disabled={createSale.isPending}
+                          onClick={() => handleSimulateSale(product)}
+                        >
+                          {createSale.isPending ? 'Memproses...' : 'Simulasikan Pembelian'}
+                        </Button>
+                      </CardFooter>
                     </Card>
                   ))
                 ) : (
