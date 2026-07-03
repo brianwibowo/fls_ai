@@ -202,9 +202,39 @@ export class ForecastingService {
 
     const totalWasteRiskVal = wasteRisk.reduce((sum, item) => sum + item.estimatedLoss, 0);
 
+    // Calculate forecast accuracy dynamically from actual forecasting records
+    const forecasts = await this.prisma.demandForecast.findMany();
+    let forecastAccuracy = 91.2;
+    if (forecasts.length > 0) {
+      let totalError = 0;
+      let count = 0;
+      for (const f of forecasts) {
+        if (f.actualDemand && f.actualDemand > 0) {
+          totalError += Math.abs(f.predictedDemand - f.actualDemand) / f.actualDemand;
+          count++;
+        }
+      }
+      if (count > 0) {
+        forecastAccuracy = Number(Math.max(60, Math.min(99.5, 100 * (1 - (totalError / count)))).toFixed(1));
+      }
+    }
+
+    // Calculate demand variance dynamically (standard deviation over mean of forecasts)
+    let demandVariance = 8.5;
+    if (forecasts.length > 1) {
+      const demands = forecasts.map(f => f.predictedDemand);
+      const mean = demands.reduce((s, v) => s + v, 0) / demands.length;
+      if (mean > 0) {
+        const squareDiffs = demands.map(v => Math.pow(v - mean, 2));
+        const avgSquareDiff = squareDiffs.reduce((s, v) => s + v, 0) / squareDiffs.length;
+        const stdDev = Math.sqrt(avgSquareDiff);
+        demandVariance = Number(((stdDev / mean) * 100).toFixed(1));
+      }
+    }
+
     return {
-      forecastAccuracy: 91.2,
-      demandVariance: 8.5,
+      forecastAccuracy,
+      demandVariance,
       reorderAlerts: reorders.length,
       wasteRisk: totalWasteRiskVal,
     };
