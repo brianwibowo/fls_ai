@@ -28,6 +28,7 @@ import { EditImageDialog } from './components/edit-image-dialog'
 import { AddBatchDialog } from './components/add-batch-dialog'
 import { InventoryDetailModal } from './components/inventory-detail-modal'
 import { EditBatchDialog } from './components/edit-batch-dialog'
+import { useAuthStore } from '@/stores/auth-store'
 
 // Helpers
 function formatRupiah(value: number): string {
@@ -39,6 +40,8 @@ function formatRupiah(value: number): string {
 }
 
 export function Inventory() {
+  const user = useAuthStore((state) => state.auth.user)
+  const userRole = user?.role?.[0]
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [riskFilter, setRiskFilter] = useState('all')
@@ -254,10 +257,12 @@ export function Inventory() {
               Pemantauan stok, kategori produk, dan status risiko kadaluarsa
             </p>
           </div>
-          <Button onClick={() => setBatchDialogOpen(true)} className='cursor-pointer'>
-            <Plus className='mr-2 h-4 w-4' />
-            Tambah Batch
-          </Button>
+          {userRole !== 'marketing_manager' && (
+            <Button onClick={() => setBatchDialogOpen(true)} className='cursor-pointer'>
+              <Plus className='mr-2 h-4 w-4' />
+              Tambah Batch
+            </Button>
+          )}
         </div>
 
         <InventorySummaryCards summaryData={summaryData} />

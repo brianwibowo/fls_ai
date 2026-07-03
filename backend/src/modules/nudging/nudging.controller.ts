@@ -8,6 +8,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole, NudgeEventType } from '@prisma/client';
 
 @Controller('nudging')
+@Roles(UserRole.ADMIN, UserRole.MARKETING_MANAGER)
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class NudgingController {
   constructor(private readonly nudgingService: NudgingService) {}

@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from '@tanstack/react-router'
 import { Package, BarChart3, AlertTriangle, RefreshCw, Calendar, Tag, ShieldAlert, Sparkles, Edit, Trash2, Pencil } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
 
 type InventoryDetailModalProps = {
   item: any | null
@@ -48,6 +49,8 @@ export function InventoryDetailModal({
   formatRupiah,
 }: InventoryDetailModalProps) {
   const navigate = useNavigate()
+  const user = useAuthStore((state) => state.auth.user)
+  const userRole = user?.role?.[0]
 
   if (!item) return null
 
@@ -175,40 +178,48 @@ export function InventoryDetailModal({
         {/* Footer Actions featuring Edit and Delete buttons */}
         <DialogFooter className='p-6 pt-0 flex flex-wrap gap-2 justify-between items-center w-full'>
           <div className='flex gap-1.5'>
-            <Button
-              variant='outline'
-              onClick={handleEditImage}
-              className='cursor-pointer text-xs h-9 px-3'
-              title='Ubah Foto Produk'
-            >
-              <Edit className='h-3.5 w-3.5' />
-            </Button>
-            <Button
-              variant='outline'
-              onClick={handleEditBatch}
-              className='cursor-pointer text-xs h-9 px-3 gap-1.5'
-            >
-              <Pencil className='h-3.5 w-3.5' />
-              Ubah
-            </Button>
+            {userRole !== 'marketing_manager' && (
+              <>
+                <Button
+                  variant='outline'
+                  onClick={handleEditImage}
+                  className='cursor-pointer text-xs h-9 px-3'
+                  title='Ubah Foto Produk'
+                >
+                  <Edit className='h-3.5 w-3.5' />
+                </Button>
+                <Button
+                  variant='outline'
+                  onClick={handleEditBatch}
+                  className='cursor-pointer text-xs h-9 px-3 gap-1.5'
+                >
+                  <Pencil className='h-3.5 w-3.5' />
+                  Ubah
+                </Button>
+              </>
+            )}
           </div>
 
           <div className='flex gap-1.5'>
-            <Button
-              variant='outline'
-              onClick={handleDeleteBatch}
-              className='cursor-pointer border-destructive/30 hover:border-destructive text-destructive hover:bg-destructive/5 text-xs h-9 px-3 gap-1.5'
-            >
-              <Trash2 className='h-3.5 w-3.5' />
-              Hapus
-            </Button>
-            <Button
-              onClick={handleCreateNudge}
-              className='cursor-pointer bg-green-600 hover:bg-green-700 text-white font-semibold text-xs h-9 px-4.5 gap-1.5'
-            >
-              <Sparkles className='h-3.5 w-3.5' />
-              Buat Nudge
-            </Button>
+            {userRole !== 'marketing_manager' && (
+              <Button
+                variant='outline'
+                onClick={handleDeleteBatch}
+                className='cursor-pointer border-destructive/30 hover:border-destructive text-destructive hover:bg-destructive/5 text-xs h-9 px-3 gap-1.5'
+              >
+                <Trash2 className='h-3.5 w-3.5' />
+                Hapus
+              </Button>
+            )}
+            {userRole !== 'logistics_manager' && (
+              <Button
+                onClick={handleCreateNudge}
+                className='cursor-pointer bg-green-600 hover:bg-green-700 text-white font-semibold text-xs h-9 px-4.5 gap-1.5'
+              >
+                <Sparkles className='h-3.5 w-3.5' />
+                Buat Nudge
+              </Button>
+            )}
           </div>
         </DialogFooter>
       </DialogContent>

@@ -26,7 +26,7 @@ Semua akun menggunakan password default: **`admin123`** / **`logistics123`** / *
 | Email | Role | Deskripsi Akses |
 |---|---|---|
 | `admin@freashday.com` | `ADMIN` | Akses penuh seluruh sistem & User CRUD |
-| `logistics@freday.com` | `LOGISTICS_MANAGER` | Akses Inventory, Forecasting & Pemesanan |
+| `logistics@freashday.com` | `LOGISTICS_MANAGER` | Akses Inventory, Forecasting & Pemesanan |
 | `marketing@freashday.com` | `MARKETING_MANAGER` | Akses Digital Nudging & Analytics |
 
 ---

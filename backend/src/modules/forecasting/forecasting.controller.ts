@@ -6,6 +6,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole, ReorderStatus } from '@prisma/client';
 
 @Controller('forecasting')
+@Roles(UserRole.ADMIN, UserRole.LOGISTICS_MANAGER)
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ForecastingController {
   constructor(private readonly forecastingService: ForecastingService) {}
