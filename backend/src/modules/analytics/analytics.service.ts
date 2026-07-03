@@ -6,6 +6,9 @@ export class AnalyticsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getOverview() {
+    // Simulasikan delay proses kalkulasi real-time selama 1 detik agar visual loading terlihat jelas
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     // 1. Fetch total current stock and received units
     const batches = await this.prisma.inventoryBatch.findMany({
       include: { product: true }
