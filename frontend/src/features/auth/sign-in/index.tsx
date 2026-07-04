@@ -45,7 +45,7 @@ export function SignIn() {
 
         {/* Footer info */}
         <div className='relative z-20 text-xs text-emerald-300/80 drop-shadow-xs'>
-          © {new Date().getFullYear()} Freashday Food Logistics System. Powered by AI.
+          © {new Date().getFullYear()} Freashday Food Logistics System. Powered by Bapak Pucung Studio x Apriansyah Wibowo
         </div>
       </div>
 

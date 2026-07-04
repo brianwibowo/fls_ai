@@ -8,6 +8,12 @@ RUN npm ci
 
 COPY . .
 
+ARG VITE_BASE_PATH=/freashday/
+ARG VITE_API_URL=http://203.175.11.198/freashday/api
+
+ENV VITE_BASE_PATH=$VITE_BASE_PATH
+ENV VITE_API_URL=$VITE_API_URL
+
 RUN npm run build
 
 # Serve with Nginx

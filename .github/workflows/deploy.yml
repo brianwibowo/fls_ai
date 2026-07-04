@@ -1,0 +1,33 @@
+name: Deploy Freashday to VPS
+
+on:
+  push:
+    branches:
+      - main # Jalankan deploy otomatis setiap kali push ke branch main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Execute Deploy Commands via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 203.175.11.198
+          username: root
+          password: ${{ secrets.VPS_PASSWORD }} # Disimpan aman di GitHub Secrets
+          script: |
+            # 1. Masuk ke folder project di VPS
+            cd /root/fls_ai
+            
+            # 2. Pull perubahan terbaru dari repositori Git
+            git pull origin main
+            
+            # 3. Jalankan ulang container Docker dengan build cache terbaru
+            docker compose up --build -d
+            
+            # 4. Sinkronisasi skema database database
+            docker exec freashday-api npx prisma db push
