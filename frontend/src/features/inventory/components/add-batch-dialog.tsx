@@ -146,9 +146,9 @@ export function AddBatchDialog({
 
             {newBatchData.categoryName === 'Lainnya' && (
               <div className='space-y-1 mt-2.5 animate-in fade-in-50 duration-200'>
-                <label className='text-xs font-semibold text-muted-foreground'>Nama Kategori Baru (Huruf Kapital)</label>
+                <label className='text-xs font-semibold text-muted-foreground'>Nama Kategori Baru</label>
                 <Input
-                  placeholder='Contoh: SNACK'
+                  placeholder='Contoh: Snack'
                   value={newBatchData.newCategoryName || ''}
                   onChange={(e) => {
                     const val = e.target.value.toUpperCase() // FORCE UPPERCASE!

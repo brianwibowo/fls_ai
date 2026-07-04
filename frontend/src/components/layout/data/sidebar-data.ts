@@ -7,6 +7,7 @@ import {
   Users,
   Settings,
   Leaf,
+  HelpCircle,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -66,6 +67,11 @@ export const sidebarData: SidebarData = {
           title: 'Pengaturan',
           url: '/settings',
           icon: Settings,
+        },
+        {
+          title: 'Pusat Bantuan',
+          url: '/help-center',
+          icon: HelpCircle,
         },
       ],
     },

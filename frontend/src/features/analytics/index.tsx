@@ -9,6 +9,7 @@ import {
   CheckCircle,
   Loader2,
   Sparkles,
+  Activity,
 } from 'lucide-react'
 import {
   Card,
@@ -86,7 +87,7 @@ export function Analytics() {
   const kpiCards = [
     { title: 'Waste Reduction', value: overview?.wasteReduction ?? 87.5, target: 90, icon: TrendingDown },
     { title: 'Sell-Through Rate', value: overview?.sellThroughRate ?? 78.4, target: 85, icon: ShoppingCart },
-    { title: 'Inventory Turnover', value: overview?.inventoryTurnover ?? 4.8, target: 5.0, icon: RefreshCw },
+    { title: 'Inventory Turnover', value: overview?.inventoryTurnover ?? 4.8, target: 5.0, icon: Activity },
     { title: 'Customer Satisfaction', value: overview?.customerSatisfaction ?? 4.2, target: 4.5, icon: Smile },
   ]
 
@@ -103,6 +104,27 @@ export function Analytics() {
     'Nudge Effect. %': c.nudgeEffectiveness,
     'Sell-Through %': c.sellThrough,
   }))
+
+  // Group insights by category and limit to 4 to reduce scrolling footprint
+  const groupedInsightsList = Object.values(
+    (insightsData || []).reduce((acc: any, insight: any) => {
+      const cat = (insight.category || 'GLOBAL').toUpperCase()
+      if (!acc[cat]) {
+        acc[cat] = {
+          category: cat,
+          type: insight.type || 'info',
+          texts: []
+        }
+      }
+      acc[cat].texts.push(insight.text)
+      if (insight.type === 'warning') {
+        acc[cat].type = 'warning'
+      } else if (insight.type === 'success' && acc[cat].type !== 'warning') {
+        acc[cat].type = 'success'
+      }
+      return acc
+    }, {} as Record<string, { category: string; type: string; texts: string[] }>)
+  ).slice(0, 4)
 
   return (
     <>
@@ -187,44 +209,52 @@ export function Analytics() {
         </div>
 
         {/* AI Insights — Rekomendasi Rantai Pasok Berbasis AI */}
-        <div className='mt-6 p-6 rounded-xl border bg-emerald-500/5 text-start border-emerald-500/10'>
-          <div className='flex items-start gap-3.5 mb-5 pb-4 border-b border-emerald-500/10'>
-            <Sparkles className='h-6 w-6 text-emerald-600 shrink-0 mt-0.5' />
+        <div className='mt-4 p-4 rounded-lg border bg-emerald-500/5 text-start border-emerald-500/10'>
+          <div className='flex items-start gap-2.5 mb-3 pb-2 border-b border-emerald-500/10'>
+            <Sparkles className='h-5 w-5 text-emerald-600 shrink-0 mt-0.5' />
             <div>
-              <h3 className='font-bold text-emerald-950 dark:text-emerald-50 text-base'>Rekomendasi Rantai Pasok Berbasis AI</h3>
-              <p className='text-xs text-muted-foreground mt-1 leading-relaxed'>
-                Rekomendasi cerdas berikut dihasilkan menggunakan model AI prediktif untuk menekan food loss dan mengoptimalkan efisiensi rantai pasok Anda secara otomatis.
+              <h3 className='font-bold text-emerald-950 dark:text-emerald-50 text-sm'>Rekomendasi Rantai Pasok Berbasis AI</h3>
+              <p className='text-[10px] text-muted-foreground mt-0.5 leading-relaxed'>
+                Rekomendasi cerdas hasil analisis prediktif AI untuk meminimalkan waste dan menstabilkan rantai pasok.
               </p>
             </div>
           </div>
 
-          <div className='grid gap-4 sm:grid-cols-2'>
+          <div className='grid gap-3 sm:grid-cols-2'>
             {isInsightsLoading || isRefreshing ? (
-              <div className='flex h-40 items-center justify-center col-span-2'>
-                <Loader2 className='h-8 w-8 animate-spin text-green-600' />
+              <div className='flex h-28 items-center justify-center col-span-2'>
+                <Loader2 className='h-6 w-6 animate-spin text-green-600' />
               </div>
             ) : (
-              insightsData && insightsData.map((insight: any) => {
+              groupedInsightsList && groupedInsightsList.map((insight: any) => {
                 const type = insight.type
                 const bgColor = type === 'warning' ? 'bg-amber-500/5 dark:bg-amber-950/10 border-amber-500/10' : type === 'success' ? 'bg-emerald-500/5 dark:bg-emerald-950/10 border-emerald-500/10' : 'bg-blue-500/5 dark:bg-blue-950/10 border-blue-500/10'
 
                 return (
                   <Card
-                    key={insight.id}
-                    className={cn('transition-all duration-200 border shadow-2xs hover:shadow-xs bg-card', bgColor)}
+                    key={insight.category}
+                    className={cn('transition-all duration-200 border shadow-3xs hover:shadow-2xs bg-card', bgColor)}
                   >
-                    <CardContent className='flex items-start gap-3.5 p-5'>
-                      <div className='p-2 rounded-lg bg-background border shadow-3xs shrink-0'>
+                    <CardContent className='flex items-start gap-2.5 p-3.5'>
+                      <div className='p-1.5 rounded-md bg-background border shadow-4xs shrink-0'>
                         {getInsightIcon(insight.type)}
                       </div>
-                      <div className='flex-1 text-start flex flex-col justify-between h-full min-h-[70px]'>
+                      <div className='flex-1 text-start flex flex-col justify-between h-full'>
                         <div>
-                          <p className='text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1'>
+                          <p className='text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5'>
                             Kategori: {insight.category}
                           </p>
-                          <p className='text-xs font-medium leading-relaxed text-foreground'>{insight.text}</p>
+                          {insight.texts.length === 1 ? (
+                            <p className='text-[11px] font-medium leading-relaxed text-foreground'>{insight.texts[0]}</p>
+                          ) : (
+                            <ul className='list-disc pl-3.5 space-y-0.5 text-[11px] font-medium leading-relaxed text-foreground'>
+                              {insight.texts.map((text: string, idx: number) => (
+                                <li key={idx} className='leading-relaxed'>{text}</li>
+                              ))}
+                            </ul>
+                          )}
                         </div>
-                        <div className='mt-3 flex items-center justify-between text-[10px] text-muted-foreground border-t border-border/40 pt-2'>
+                        <div className='mt-2 flex items-center justify-between text-[9px] text-muted-foreground border-t border-border/40 pt-1.5'>
                           <span>Rekomendasi Sistem</span>
                           <span className='font-semibold text-emerald-600 dark:text-emerald-400'>Aktif</span>
                         </div>

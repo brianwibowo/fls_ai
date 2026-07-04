@@ -80,7 +80,18 @@ export function Users() {
               Kelola data pengguna sistem dan hak akses mereka di sini.
             </p>
           </div>
-          <UsersPrimaryButtons />
+          <div className='flex items-center gap-2'>
+            <UsersPrimaryButtons />
+            <Button
+              variant='ghost'
+              size='icon'
+              className='h-9 w-9 rounded-full border hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer shrink-0'
+              onClick={() => setRoleInfoOpen(true)}
+              title='Informasi Peran (Role)'
+            >
+              <Info className='h-4 w-4' />
+            </Button>
+          </div>
         </div>
         
         {isLoading ? (
