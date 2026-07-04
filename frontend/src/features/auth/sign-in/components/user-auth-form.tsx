@@ -121,6 +121,58 @@ export function UserAuthForm({
           {isLoading ? <Loader2 className='animate-spin' /> : <LogIn />}
           Masuk
         </Button>
+
+        {/* Demo Accounts Quick Login */}
+        <div className='mt-2 pt-3.5 border-t border-dashed text-start space-y-2'>
+          <div className='text-xs font-semibold text-muted-foreground flex items-center gap-1.5'>
+            <span className='w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse' />
+            Akun Uji Coba (Demo Mode)
+          </div>
+          <div className='grid grid-cols-3 gap-1.5'>
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              className='text-[10px] h-7 px-1 text-emerald-600 border-emerald-200 hover:bg-emerald-500/5 cursor-pointer font-medium'
+              onClick={() => {
+                form.setValue('email', 'admin@freashday.com')
+                form.setValue('password', 'admin123')
+                form.handleSubmit(onSubmit)()
+              }}
+            >
+              Admin
+            </Button>
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              className='text-[10px] h-7 px-1 text-indigo-600 border-indigo-200 hover:bg-indigo-500/5 cursor-pointer font-medium'
+              onClick={() => {
+                form.setValue('email', 'logistics@freashday.com')
+                form.setValue('password', 'logistics123')
+                form.handleSubmit(onSubmit)()
+              }}
+            >
+              Logistics
+            </Button>
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              className='text-[10px] h-7 px-1 text-amber-600 border-amber-200 hover:bg-amber-500/5 cursor-pointer font-medium'
+              onClick={() => {
+                form.setValue('email', 'marketing@freashday.com')
+                form.setValue('password', 'marketing123')
+                form.handleSubmit(onSubmit)()
+              }}
+            >
+              Marketing
+            </Button>
+          </div>
+          <p className='text-[10px] text-muted-foreground leading-normal italic'>
+            *Klik tombol di atas untuk login instan. Info demo ini akan dihapus di kemudian hari.
+          </p>
+        </div>
       </form>
     </Form>
   )
